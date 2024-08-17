@@ -1,18 +1,32 @@
 {
-  "name": "jquants",
+  "name": "jquants-api-test",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",  
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf dist && tsc",
+    "test": "jest tests",
+    "dev": "npm run build && node dist/index.js"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "description": "",
   "devDependencies": {
     "@types/node": "^20.14.11",
+    "jest": "^29.7.0",
     "nodemon": "^3.1.4",
+    "ts-jest": "^29.2.4",
     "ts-node": "^10.9.2",
+    "tsimp": "^2.0.11",
     "typescript": "^5.5.3"
+  },
+  "dependencies": {
+    "axios": "^1.7.4",
+    "pino": "^9.3.2",
+    "pino-pretty": "^11.2.2",
+    "yaml": "^2.5.0"
   }
 }

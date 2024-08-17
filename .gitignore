@@ -1,1 +1,5 @@
 node_modules/
+credentials.yaml
+/_misc
+/.tsimp
+/dist/

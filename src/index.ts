@@ -1,9 +1,6 @@
-import url from 'node:url';
 import { loadCredential } from './util/credential-loader';
 import { getLogger } from './util/logger';
-import ExURL from './util/exUrl';
-
-import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
+import JQH from './j-quants';
 
 const lg = getLogger("trace");
 // config.yaml を読み込む
@@ -13,22 +10,25 @@ const creds = loadCredential('credentials.yaml');
 lg.trace(`user: ${creds.user}`);
 lg.trace(`password: ${creds.password}`);
 
-//
-const api_base_url = new ExURL('https://api.jquants.com/v1/');
 
-const refresh_api = api_base_url.withPath( 'token/auth_user' );
-refresh_api.method = "POST";
-
-lg.trace(`api_base_url: ${api_base_url.toString()}`);
-lg.trace(`refresh_api: ${refresh_api.toString()}`);
-
-const req: AxiosRequestConfig =
+async function main()
 {
-	url:	refresh_api.toString(),
-	method: refresh_api.method,
-	data:
+	const jqh = new JQH();
+	let r = await jqh.getRefreshToken({
+				email: creds.user,
+				password: creds.password
+			})
+
+	let refresh_token: string;
+	if( r.ok )
 	{
-		mailaddress: creds.user,
-		password: creds.password
+		refresh_token = r.data.refreshToken;
+		lg.trace(`refresh_token: "${refresh_token}"`)
+	}
+	else
+	{
+		lg.error(`faild to get refresh token: ${r.data.statusCode} ${r.data.statusText}`)
 	}
 }
+
+main()

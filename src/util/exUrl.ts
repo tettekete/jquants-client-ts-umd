@@ -1,5 +1,5 @@
 
-type HTTP_METHODS_T = "GET" 
+export type HTTP_METHODS_T = "GET" 
 					| "HEAD"
 					| "POST"
 					| "PUT"

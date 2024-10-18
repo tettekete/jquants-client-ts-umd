@@ -196,7 +196,7 @@ export default class JQuantsAPIHandler
 			let data = extractor( res );
 			result = Result.success( data );
 
-			lg.trace(`data: ${JSON.stringify( res.data )}`);
+			lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
 		}
 		catch (e: unknown )
 		{

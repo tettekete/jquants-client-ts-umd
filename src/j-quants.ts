@@ -1,5 +1,5 @@
 import ExURL ,{ HTTP_METHODS_T } from './util/exUrl';
-import Result from '@tettekete/result';
+import Result ,{ResultMakerArgsT} from '@tettekete/result';
 import { getLogger } from './util/logger';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs from 'dayjs';
@@ -26,6 +26,7 @@ export default class JQuantsAPIHandler
 	private _auth_email		: string | undefined;
 	private _auth_password	: string | undefined;
 	private _token_store	: APITokenStore;
+	private _last_result	: Result | undefined;
 
 	private _refresh_token_TTL	= kRefreshTokenTTL;
 	private _id_token_TTL 		= kIdTokenTTL
@@ -63,8 +64,8 @@ export default class JQuantsAPIHandler
 	set refresh_token( token: TOKEN_RECORD | undefined )
 	{
 		this._refresh_token = token
-	};
-
+	}
+	
 	get refresh_token(): string | undefined
 	{
 		// レコードが登録されていて期限切れで無ければトークンを返す
@@ -97,6 +98,12 @@ export default class JQuantsAPIHandler
 		}
 		return undefined;
 	};
+
+	get last_result(): Result | undefined
+	{
+		return this._last_result;
+	}
+
 
 	private static readonly baseURL = new ExURL('https://api.jquants.com/v1/');
 	private static readonly URLs: {	[key: string]: API_CONFIG_T } =
@@ -199,7 +206,7 @@ export default class JQuantsAPIHandler
 			
 		}
 
-		return result;
+		return this.returnResult( result );
 	}
 
 	//               _   _                _   _           _       
@@ -241,7 +248,7 @@ export default class JQuantsAPIHandler
 
 		if( ! _email || ! _password )
 		{
-			return Result.failure("Either email or password is not defined.");
+			return this.failureResult("Either email or password is not defined.");
 		}
 
 		// トークンストアの状態をメンバーへ読み出す
@@ -271,25 +278,25 @@ export default class JQuantsAPIHandler
 				}
 				else
 				{
-					return Result.failure(
-						"getRefreshToken faild.",
-						r.data
-					);
+					return this.failureResult(
+							"getRefreshToken faild.",
+							r.data
+						);
 				}
 				
-				return r
+				return this.returnResult( r );
 			}
 			else
 			{
 				const r = await this.getIDToken();
 				if( r.ng )
 				{
-					return r;
+					return this.returnResult( r );
 				}
 			}
 		}
 
-		return Result.success();
+		return this.successResult();
 	}
 
 	//              _   ____       __               _   _____     _              
@@ -324,7 +331,7 @@ export default class JQuantsAPIHandler
 
 		if( ! _email || ! _pw )
 		{
-			return Result.failure("Either email or password is not defined.");
+			return this.failureResult("Either email or password is not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -357,7 +364,7 @@ export default class JQuantsAPIHandler
 			this.refresh_token = toke_rec
 		};
 
-		return r
+		return this.returnResult( r );
 	}
 
 
@@ -388,7 +395,7 @@ export default class JQuantsAPIHandler
 		let _refresh_token = refresh_token ?? this._refresh_token;
 		if(! _refresh_token )
 		{
-			return Result.failure("refresh_token not defined.");
+			return this.failureResult("refresh_token not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -420,6 +427,24 @@ export default class JQuantsAPIHandler
 			this.id_token = toke_rec;
 		}
 
-		return r;
+		return this.returnResult( r );
+	}
+	// - - - - - - - - - - - - - - - - - - - -
+	// Utility
+	// - - - - - - - - - - - - - - - - - - - -
+
+	protected successResult(...args: ResultMakerArgsT ):Result
+	{
+		return this._last_result = Result.success( ...args );
+	}
+
+	protected failureResult(...args: ResultMakerArgsT ):Result
+	{
+		return this._last_result = Result.failure( ...args );
+	}
+
+	protected returnResult( r: Result ): Result
+	{
+		return this._last_result = r;
 	}
 }

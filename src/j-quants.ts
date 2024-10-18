@@ -392,7 +392,7 @@ export default class JQuantsAPIHandler
 	{
 		let exurl = this.id_token_api_url;
 
-		let _refresh_token = refresh_token ?? this._refresh_token;
+		let _refresh_token = refresh_token ?? this.refresh_token;
 		if(! _refresh_token )
 		{
 			return this.failureResult("refresh_token not defined.");
@@ -404,7 +404,7 @@ export default class JQuantsAPIHandler
 			method: exurl.method,
 			params:
 			{
-				refreshtoken: refresh_token
+				refreshtoken: _refresh_token
 			}
 		}
 

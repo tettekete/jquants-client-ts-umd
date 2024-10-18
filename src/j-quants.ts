@@ -117,6 +117,11 @@ export default class JQuantsAPIHandler
 		{
 			path: 'token/auth_refresh',
 			method: 'POST'
+		},
+		listed_info:
+		{
+			path: 'listed/info',
+			method: 'GET'
 		}
 	}
 
@@ -429,6 +434,40 @@ export default class JQuantsAPIHandler
 
 		return this.returnResult( r );
 	}
+
+	//   _ _     _           _ ___        __       
+	//  | (_)___| |_ ___  __| |_ _|_ __  / _| ___  
+	//  | | / __| __/ _ \/ _` || || '_ \| |_ / _ \ 
+	//  | | \__ \ ||  __/ (_| || || | | |  _| (_) |
+	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
+	//                                             
+	async listedInfo({code , date}:{code?: string, date?: string } = {})
+	{
+		const exurl = JQuantsAPIHandler._api_url_maker( 'listed_info' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			}
+		}
+
+		const params:{code?: string, date?: string } = {};
+		if( code ) { params['code'] = code }
+		if( date ) { params['date'] = date }
+
+		if( Object.keys(params).length )
+		{
+			req['params'] = params;
+		}
+
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

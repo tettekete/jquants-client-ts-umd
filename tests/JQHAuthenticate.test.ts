@@ -46,7 +46,7 @@ const jqh = new JQH({
 });
 
 // 各有効期限をテスト用に設定
-jqh.refresh_token_ttl = 5;
+jqh.refresh_token_ttl = 4;
 jqh.id_token_ttl = 2
 
 // DefaultAPITokenStore がシステムテンポラリに yaml ファイルを作るように調整します。
@@ -57,23 +57,90 @@ let yaml_temp_path:string = path.join( yaml_temp_dir , YAML_FILE );
 ( jqh.token_store as DefaultAPITokenStore ).yaml_file = yaml_temp_path;
 
 // 期限切れシミュレートのための sleep 関数
-const sleep = async (ms:number) => {
-    return new Promise(resolve => setTimeout(resolve, ms));
+const sleep = async (sec:number) => {
+    return new Promise(resolve => setTimeout(resolve, sec * 1000));
 }
 
 
-describe('JQH authenticate tests',()=>
+describe('JQH refreshTokens tests',()=>
 {
-	describe('First authenticate',() =>
+	describe('First refreshTokens',() =>
 	{
-		test('authenticate',async ()=>
+		test('init with refreshTokens',async ()=>
 		{
-			const r1 = await jqh.authenticate();
-			
-			expect( r1.ok ).toBeTruthy();
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy();
 			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.0' );
 			expect( jqh.id_token ).toBe( '<ID token>.0' );
-			
+
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy;
+			expect( jqh.id_token ).toBe( '<ID token>.0' );
+		});
+
+		test('The first ID token is valid for 2 seconds',async ()=>
+		{
+			await sleep( 1 );
+
+			// 1 sec passed
+
+			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.0' );
+			expect( jqh.id_token ).toBe( '<ID token>.0' );
+		});
+
+		// 1.x sec passed
+
+		test('After 2 seconds ID token is invalid.',async ()=>
+		{
+			await sleep( 2 );
+
+			// 3.x sec passed
+
+			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.0' );
+			expect( jqh.id_token ).toBeUndefined();
+		});
+
+		// 3.xx sec passed
+
+		test('Refresh token is valid so you can get a new ID token.',async ()=>
+		{
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy();
+
+			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.0' );
+			expect( jqh.id_token ).toBe( '<ID token>.1' );
+		});
+
+		// 3.xxx sec / 0.x sec passed
+
+		test('After 4 seconds Refresh token is invalid.',async ()=>
+		{
+			await sleep( 1 );
+
+			// 4.x4 sec / 1.xx sec passed
+			expect( jqh.refresh_token ).toBeUndefined();
+			expect( jqh.id_token ).toBe( '<ID token>.1' );	// It's only been 1.x seconds.
+		});
+
+		// 4.x5 sec / 1.xxx sec passed
+
+		test('The Refresh Token will not be updated while the ID token is valid.',async ()=>
+		{
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy();
+
+			expect( jqh.refresh_token ).toBeUndefined();
+			expect( jqh.id_token ).toBe( '<ID token>.1' );	// It's only been 1.xxx seconds.
+		});
+
+		// 4.x6 sec / 1.x4 sec passed
+
+		test('When the ID token expires, the refresh token is also updated.',async ()=>
+		{
+			await sleep( 1 );
+
+			// 5.x6 sec / 2.x4 sec passed
+
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy();
+
+			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.1' );
+			expect( jqh.id_token ).toBe( '<ID token>.2' );
 		});
 	});
 })

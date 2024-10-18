@@ -37,7 +37,7 @@ export default class JQuantsAPIHandler
 
 	get refresh_token_ttl(): number
 	{
-		return this._refresh_token_TTL;
+		return this._refresh_token_TTL ?? kRefreshTokenTTL;
 	}
 
 	set id_token_ttl( ttl: number )
@@ -47,7 +47,7 @@ export default class JQuantsAPIHandler
 
 	get id_token_ttl(): number
 	{
-		return this._id_token_TTL;
+		return this._id_token_TTL ?? kIdTokenTTL;
 	}
 
 	set token_store( token_srore: APITokenStore )
@@ -350,7 +350,7 @@ export default class JQuantsAPIHandler
 			const toke_rec:TOKEN_RECORD =
 			{
 				token: r.data as string,
-				expiration: dayjs().add(kRefreshTokenTTL,'second')
+				expiration: dayjs().add( this.refresh_token_ttl,'second')
 			};
 
 			this._token_store.set_refresh_token_info( toke_rec );
@@ -413,7 +413,7 @@ export default class JQuantsAPIHandler
 			const toke_rec:TOKEN_RECORD =
 			{
 				token: r.data as string,
-				expiration: dayjs().add( kIdTokenTTL,'second')
+				expiration: dayjs().add( this.id_token_ttl ,'second')
 			};
 			
 			this._token_store.set_id_token_info( toke_rec );

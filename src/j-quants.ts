@@ -278,6 +278,8 @@ export default class JQuantsAPIHandler
 		{
 			if( ! this.refresh_token )
 			{
+				lg.trace('Update the Refresh and Token ID Token.');
+
 				let r = await this.getRefreshToken({
 						email: _email ,
 						password: _password
@@ -299,12 +301,18 @@ export default class JQuantsAPIHandler
 			}
 			else
 			{
+				lg.trace('Update the ID Token using a valid Refresh Token.');
+
 				const r = await this.getIDToken();
 				if( r.ng )
 				{
 					return this.returnResult( r );
 				}
 			}
+		}
+		else
+		{
+			lg.trace('Use the ID Token already received.')
 		}
 
 		return this.successResult();

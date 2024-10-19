@@ -435,13 +435,14 @@ export default class JQuantsAPIHandler
 		return this.returnResult( r );
 	}
 
+	// API: /lsited/info
 	//   _ _     _           _ ___        __       
 	//  | (_)___| |_ ___  __| |_ _|_ __  / _| ___  
 	//  | | / __| __/ _ \/ _` || || '_ \| |_ / _ \ 
 	//  | | \__ \ ||  __/ (_| || || | | |  _| (_) |
 	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
 	//                                             
-	async listedInfo({code , date}:{code?: string, date?: Date | Dayjs } = {})
+	async listedInfo({code , date}:{code?: string, date?: string | Date | Dayjs } = {})
 	{
 		const exurl = JQuantsAPIHandler._api_url_maker( 'listed_info' );
 		const req: AxiosRequestConfig =
@@ -458,22 +459,7 @@ export default class JQuantsAPIHandler
 		if( code ) { params['code'] = code }
 		if( date )
 		{
-			let date_string: string
-			const date_format = 'YYYY-MM-DD';
-			if( date instanceof Date )
-			{
-				date_string = dayjs( date ).format( date_format );
-			}
-			else if( dayjs.isDayjs( date ) )
-			{
-				date_string = date.format( date_format );
-			}
-			else
-			{
-				throw Error('date is neither a Date object nor a Dayjs object.');
-			}
-
-			params['date'] = date_string;
+			params['date'] = this.toJQDate( date );
 		}
 
 		if( Object.keys(params).length )
@@ -485,10 +471,66 @@ export default class JQuantsAPIHandler
 
 		return this.returnResult( r );
 	}
+			{
+			}
+
+		}
+
+		{
+		}
+
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
 
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -
+	/**
+	 * Convert the specified date to a string in the “YYYY-MM-DD” format
+	 * required by the J-QUANTS API.
+	 * 
+	 * @param {string | Date | Dayjs} date - The input date to be converted. It can be:
+	 *  - A string representing a date that Dayjs can parse,
+	 *    or simply a string in the 'YYYY-MM-DD' format.
+	 *  - A JavaScript `Date` object.
+	 *  - A `Dayjs` object.
+	 * 
+	 * @returns {string} The date formatted as "YYYY-MM-DD".
+	 * 
+	 * @throws {Error} If the input is a string and does not represent a valid date, or if the input is neither
+	 * a string, `Date`, nor `Dayjs` object.
+	 */
+	toJQDate( date: string | Date | Dayjs ): string
+	{
+		const date_format = 'YYYY-MM-DD';
+
+		if( typeof date === 'string' )
+		{
+			if( dayjs( date ).isValid() )
+			{
+				return dayjs( date ).format( date_format );
+			}
+			else
+			{
+				throw Error(`The date format of the string "${date}" is invalid.`);
+			}
+		}
+		
+		if( date instanceof Date )
+		{
+			return dayjs( date ).format( date_format );
+		}
+		else if( dayjs.isDayjs( date ) )
+		{
+			return date.format( date_format );
+		}
+		else
+		{
+			throw Error('The date is neither a Date object nor a Dayjs object, nor is it a string in "YYYY-MM-DD" format.');
+		}
+	}
 
 	protected successResult(...args: ResultMakerArgsT ):Result
 	{

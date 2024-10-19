@@ -2,7 +2,7 @@ import ExURL ,{ HTTP_METHODS_T } from './util/exUrl';
 import Result ,{ResultMakerArgsT} from '@tettekete/result';
 import { getLogger } from './util/logger';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
-import dayjs from 'dayjs';
+import dayjs ,{Dayjs} from 'dayjs';
 
 import { DefaultAPITokenStore } from './j-quants/DefaultAPITokenStore';
 import { APITokenStore ,TOKEN_RECORD } from './j-quants/Types';
@@ -441,7 +441,7 @@ export default class JQuantsAPIHandler
 	//  | | \__ \ ||  __/ (_| || || | | |  _| (_) |
 	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
 	//                                             
-	async listedInfo({code , date}:{code?: string, date?: string } = {})
+	async listedInfo({code , date}:{code?: string, date?: Date | Dayjs } = {})
 	{
 		const exurl = JQuantsAPIHandler._api_url_maker( 'listed_info' );
 		const req: AxiosRequestConfig =
@@ -456,7 +456,25 @@ export default class JQuantsAPIHandler
 
 		const params:{code?: string, date?: string } = {};
 		if( code ) { params['code'] = code }
-		if( date ) { params['date'] = date }
+		if( date )
+		{
+			let date_string: string
+			const date_format = 'YYYY-MM-DD';
+			if( date instanceof Date )
+			{
+				date_string = dayjs( date ).format( date_format );
+			}
+			else if( dayjs.isDayjs( date ) )
+			{
+				date_string = date.format( date_format );
+			}
+			else
+			{
+				throw Error('date is neither a Date object nor a Dayjs object.');
+			}
+
+			params['date'] = date_string;
+		}
 
 		if( Object.keys(params).length )
 		{

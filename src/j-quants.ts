@@ -122,7 +122,13 @@ export default class JQuantsAPIHandler
 		{
 			path: 'listed/info',
 			method: 'GET'
+		},
+		prices_daily_quotes:
+		{
+			path: 'prices/daily_quotes',
+			method: 'GET'
 		}
+		
 	}
 
 	constructor({
@@ -471,12 +477,75 @@ export default class JQuantsAPIHandler
 
 		return this.returnResult( r );
 	}
-			{
-			}
 
+
+	// API: /prices/daily_quotes
+	//              _               ____        _ _        ___              _            
+	//   _ __  _ __(_) ___ ___  ___|  _ \  __ _(_) |_   _ / _ \ _   _  ___ | |_ ___  ___ 
+	//  | '_ \| '__| |/ __/ _ \/ __| | | |/ _` | | | | | | | | | | | |/ _ \| __/ _ \/ __|
+	//  | |_) | |  | | (_|  __/\__ \ |_| | (_| | | | |_| | |_| | |_| | (_) | ||  __/\__ \
+	//  | .__/|_|  |_|\___\___||___/____/ \__,_|_|_|\__, |\__\_\\__,_|\___/ \__\___||___/
+	//  |_|                                         |___/                                
+	async pricesDailyQuotes(
+		{
+			code,
+			from,
+			to,
+			date,
+			pagination_key
+		}
+		:{
+			code?:	string;
+			from?:	string | Date | Dayjs;
+			to?:	string | Date | Dayjs;
+			date?:	string | Date | Dayjs;
+			pagination_key?:	string
+		}
+	)
+	{
+		// arg pattern validation
+		if( (! code && ! date) && ( code && date ) )
+		{
+			return this.failureResult('pricesDailyQuotes() requires "code" or "date"')
 		}
 
+		const params:{ [key in string]: string} = {};
+		if( code )
 		{
+			params['code'] = code;
+			if( from || to )
+			{
+				if( from && to )
+				{
+					params['from'] = this.toJQDate( from )
+					params['to'] = this.toJQDate( to )
+				}
+				else
+				{
+					return this.failureResult('If “from” or “to” is used, both must be defined in pricesDailyQuotes().');
+				}
+			}
+		}
+		else if( date )
+		{
+			params['date'] = this.toJQDate( date );
+		}
+
+		if( pagination_key )
+		{
+			params['pagination_key'] = pagination_key;
+		}
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
 		}
 
 		let r = await this.request_with_axios( req ,(res) => {return res.data });

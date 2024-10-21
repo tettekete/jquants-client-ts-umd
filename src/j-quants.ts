@@ -139,8 +139,12 @@ export default class JQuantsAPIHandler
 		{
 			path: 'markets/trades_spec',
 			method: 'GET'
-		}
-		
+		},
+		markets_weekly_margin_interest:
+		{
+			path: 'markets/weekly_margin_interest',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -666,6 +670,80 @@ export default class JQuantsAPIHandler
 			params: params
 		}
 
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
+	// API: /markets/weekly_margin_interest
+	//                        _        _     __        __        _    _       __  __                 _       ___       _                     _   
+	//   _ __ ___   __ _ _ __| | _____| |_ __\ \      / /__  ___| | _| |_   _|  \/  | __ _ _ __ __ _(_)_ __ |_ _|_ __ | |_ ___ _ __ ___  ___| |_ 
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __\ \ /\ / / _ \/ _ \ |/ / | | | | |\/| |/ _` | '__/ _` | | '_ \ | || '_ \| __/ _ \ '__/ _ \/ __| __|
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \\ V  V /  __/  __/   <| | |_| | |  | | (_| | | | (_| | | | | || || | | | ||  __/ | |  __/\__ \ |_ 
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/ \_/\_/ \___|\___|_|\_\_|\__, |_|  |_|\__,_|_|  \__, |_|_| |_|___|_| |_|\__\___|_|  \___||___/\__|
+	//                                                                  |___/                  |___/                                             
+	async marketsWeeklyMarginInterest(
+		{
+			code,
+			date,
+			from,
+			to,
+			pagination_key
+		}
+		:{
+			code?:	string;
+			date?:	string | Date | Dayjs;
+			from?:	string | Date | Dayjs;
+			to?:	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		// arg pattern validation
+		if( (! code && ! date) || ( code && date ) )
+		{
+			return this.failureResult('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code )
+		{
+			params['code'] = code;
+			if( from || to )
+			{
+				if( from && to )
+				{
+					params['from'] = this.toJQDate( from )
+					params['to'] = this.toJQDate( to )
+				}
+				else
+				{
+					return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().');
+				}
+			}
+		}
+		else if( date )
+		{
+			params['date'] = this.toJQDate( date );
+		}
+
+		if( pagination_key )
+		{
+			params['pagination_key'] = pagination_key;
+		}
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
 		let r = await this.request_with_axios( req ,(res) => {return res.data });
 
 		return this.returnResult( r );

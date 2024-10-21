@@ -127,6 +127,11 @@ export default class JQuantsAPIHandler
 		{
 			path: 'prices/daily_quotes',
 			method: 'GET'
+		},
+		prices_prices_am:
+		{
+			path: 'prices/prices_am',
+			method: 'GET'
 		}
 		
 	}
@@ -555,6 +560,60 @@ export default class JQuantsAPIHandler
 			},
 			params: params
 		}
+
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
+
+	// API: /prices/prices_am
+	//              _               ____       _                  _              
+	//   _ __  _ __(_) ___ ___  ___|  _ \ _ __(_) ___ ___  ___   / \   _ __ ___  
+	//  | '_ \| '__| |/ __/ _ \/ __| |_) | '__| |/ __/ _ \/ __| / _ \ | '_ ` _ \ 
+	//  | |_) | |  | | (_|  __/\__ \  __/| |  | | (_|  __/\__ \/ ___ \| | | | | |
+	//  | .__/|_|  |_|\___\___||___/_|   |_|  |_|\___\___||___/_/   \_\_| |_| |_|
+	//  |_|                                                                      
+	/**
+	 * Fetches the prices for the AM session using the JQuants API.
+	 * 
+	 * pagination_key is an argument for pagination, and if it was included in
+	 * the previous search results, it is a parameter for obtaining the continuation.
+	 * 
+	 * NOTE: To use this function, you need to subscribe to a paid plan.
+	 *
+	 * @async
+	 * @function pricesPricesAm
+	 * @param {Object} params - The parameters for the request.
+	 * @param {string} [params.code] - The stock code to filter the results (optional).
+	 * @param {string} [params.pagination_key] - The pagination key for retrieving the next set of results (optional).
+	 * @returns {Promise<Result>} A promise that resolves to the result of the API call.
+	 */
+	async pricesPricesAm({
+		code,
+		pagination_key
+	}
+	:{
+		code?: string;
+		pagination_key?: string
+	}): Promise<Result>
+	{
+		const exurl = JQuantsAPIHandler._api_url_maker( 'prices_prices_am' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			}
+		}
+
+		const params:{code?: string, pagination_key?: string } = {};
+		if( code )				{ params['code'] = code }
+		if( pagination_key )	{ params['pagination_key'] = pagination_key }
+
+		req['params'] = params;
 
 		let r = await this.request_with_axios( req ,(res) => {return res.data });
 

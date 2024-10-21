@@ -16,6 +16,8 @@ type API_CONFIG_T =
 	method: HTTP_METHODS_T;
 }
 
+export type INVESTMENT_CATEGORY = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
+
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
 
@@ -131,6 +133,11 @@ export default class JQuantsAPIHandler
 		prices_prices_am:
 		{
 			path: 'prices/prices_am',
+			method: 'GET'
+		},
+		markets_trades_spec:
+		{
+			path: 'markets/trades_spec',
 			method: 'GET'
 		}
 		
@@ -614,6 +621,50 @@ export default class JQuantsAPIHandler
 		if( pagination_key )	{ params['pagination_key'] = pagination_key }
 
 		req['params'] = params;
+
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
+	// API: /markets/trades_spec
+	//                        _        _      _____              _           ____                  
+	//   _ __ ___   __ _ _ __| | _____| |_ __|_   _| __ __ _  __| | ___  ___/ ___| _ __   ___  ___ 
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __|| || '__/ _` |/ _` |/ _ \/ __\___ \| '_ \ / _ \/ __|
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| |  __/\__ \___) | |_) |  __/ (__ 
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|\___||___/____/| .__/ \___|\___|
+	//                                                                            |_|              
+	async marketsTradesSpec(
+		{
+			section,
+			from,
+			to
+		}
+		:{
+			section?: INVESTMENT_CATEGORY;
+			from?: string;
+			to?: string;
+		} = {}
+	): Promise<Result>
+	{
+		const params:
+		{
+			section?: INVESTMENT_CATEGORY;
+			from?: string;
+			to?: string;
+		} = {};
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
 
 		let r = await this.request_with_axios( req ,(res) => {return res.data });
 

@@ -16,7 +16,8 @@ type API_CONFIG_T =
 	method: HTTP_METHODS_T;
 }
 
-export type INVESTMENT_CATEGORY = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
+// 投資部門別情報 - 市場名
+export type INVESTMENT_CATEGORY_T = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
 
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
@@ -645,7 +646,7 @@ export default class JQuantsAPIHandler
 			to
 		}
 		:{
-			section?: INVESTMENT_CATEGORY;
+			section?: INVESTMENT_CATEGORY_T;
 			from?: string;
 			to?: string;
 		} = {}
@@ -653,7 +654,7 @@ export default class JQuantsAPIHandler
 	{
 		const params:
 		{
-			section?: INVESTMENT_CATEGORY;
+			section?: INVESTMENT_CATEGORY_T;
 			from?: string;
 			to?: string;
 		} = {};

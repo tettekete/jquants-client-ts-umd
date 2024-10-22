@@ -182,6 +182,11 @@ export default class JQuantsAPIHandler
 			path: 'indices/topix',
 			method: 'GET'
 		},
+		fins_statements:
+		{
+			path: 'fins/statements',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -271,6 +276,33 @@ export default class JQuantsAPIHandler
 		}
 
 		return this.returnResult( result );
+	}
+	
+	async _request_wiith_auth_header(
+		{
+			url,
+			params
+		}:
+		{
+			url: ExURL;
+			params: { [key in string]: string | number }
+		}
+	): Promise<Result>
+	{
+		const req: AxiosRequestConfig =
+		{
+			url:	url.toString(),
+			method: url.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
 	}
 
 	//             __               _   _____     _                  
@@ -1051,6 +1083,46 @@ export default class JQuantsAPIHandler
 
 		return this.returnResult( r );
 	}
+
+
+	// API: /fins/statements
+	//    __ _           ____  _        _                            _       
+	//   / _(_)_ __  ___/ ___|| |_ __ _| |_ ___ _ __ ___   ___ _ __ | |_ ___ 
+	//  | |_| | '_ \/ __\___ \| __/ _` | __/ _ \ '_ ` _ \ / _ \ '_ \| __/ __|
+	//  |  _| | | | \__ \___) | || (_| | ||  __/ | | | | |  __/ | | | |_\__ \
+	//  |_| |_|_| |_|___/____/ \__\__,_|\__\___|_| |_| |_|\___|_| |_|\__|___/
+	//                                                                       
+	async finsStatements(
+		{
+			code,
+			date,
+			pagination_key
+		}:
+		{
+			code?:	string;
+			date?:	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		if( (! code && ! date) || ( code && date ) )
+		{
+			return this.failureResult('finsStatements() requires either "code" or "date", but not both.')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code			){ params['code']			= code }
+		if( date			){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'fins_statements' ),
+				params: params
+			}
+		);
+	}
+
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

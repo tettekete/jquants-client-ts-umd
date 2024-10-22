@@ -65,6 +65,25 @@ export type DERIVATIVES_FUTURES_CAT_T	= 'TOPIXF'
 										| 'TOA3MF'
 										;
 
+
+/* オプション四本値 - オプション商品区分コード
+API: /derivatives/options
+
+|商品区分コード|商品区分名称|データ収録期間|
+|---|---|---|
+|TOPIXE|TOPIXオプション|2008/5/7〜|
+|NK225E|日経225オプション|2008/5/7〜|
+|JGBLFE|長期国債先物オプション|2008/5/7〜|
+|EQOP|有価証券オプション|2014/11/17〜|
+|NK225MWE|日経225miniオプション|2023/5/29〜|
+*/
+export type DERIVATIVES_OPTIONS_CAT_T	= 'TOPIXE'
+										| 'NK225E'
+										| 'JGBLFE'
+										| 'EQOP'
+										| 'NK225MWE'
+										;
+
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
 
@@ -245,6 +264,11 @@ export default class JQuantsAPIHandler
 		derivatives_futures:
 		{
 			path: 'derivatives/futures',
+			method: 'GET'
+		},
+		derivatives_options:
+		{
+			path: 'derivatives/options',
 			method: 'GET'
 		},
 	}
@@ -1379,6 +1403,52 @@ export default class JQuantsAPIHandler
 			}
 		);
 	}
+
+
+	// API: /derivatives/options
+	// derivativesOptions
+	async derivativesOptions(
+		{
+			date,
+			category,
+			code,
+			contract_flag,
+			pagination_key
+
+		}:
+		{
+			date:				string | Date | Dayjs;
+			category?:			DERIVATIVES_OPTIONS_CAT_T;
+			code?:				string;
+			contract_flag?:		string;
+			pagination_key?:	string;
+		}
+	)
+	{
+		if( code && category !== 'EQOP' )
+		{
+			return this.failureResult("'code' can be specified only when 'EQOP' is specified for the category.");
+		}
+
+		const params:{ [key in string]: string} =
+		{
+			date: this.toJQDate( date )
+		};
+
+		if( category		){ params['category']		= category }
+		if( code			){ params['code']			= code }
+		if( contract_flag	){ params['contract_flag']	= contract_flag }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'derivatives_options' ),
+				params: params
+			}
+		);
+	}
+
+
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

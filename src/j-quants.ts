@@ -872,7 +872,7 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_breakdown' );
 		const req: AxiosRequestConfig =
 		{
 			url:	exurl.toString(),
@@ -924,7 +924,7 @@ export default class JQuantsAPIHandler
 		if( from			){ params['from']				= this.toJQDate( from ) }
 		if( to				){ params['to']					= this.toJQDate( to ) }
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' );
 		const req: AxiosRequestConfig =
 		{
 			url:	exurl.toString(),
@@ -988,7 +988,7 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const exurl = JQuantsAPIHandler._api_url_maker( 'indices' );
 		const req: AxiosRequestConfig =
 		{
 			url:	exurl.toString(),

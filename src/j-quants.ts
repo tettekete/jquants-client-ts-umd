@@ -172,6 +172,11 @@ export default class JQuantsAPIHandler
 			path: 'markets/trading_calendar',
 			method: 'GET'
 		},
+		indices:
+		{
+			path: 'indices',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -914,10 +919,74 @@ export default class JQuantsAPIHandler
 			from?:	string | Date | Dayjs;
 			to?:	string | Date | Dayjs;
 		} = {};
-		
+
 		if( holidaydivision	){ params['holidaydivision']	= holidaydivision }
 		if( from			){ params['from']				= this.toJQDate( from ) }
 		if( to				){ params['to']					= this.toJQDate( to ) }
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
+
+	// API: /indices
+	//   _           _ _               
+	//  (_)_ __   __| (_) ___ ___  ___ 
+	//  | | '_ \ / _` | |/ __/ _ \/ __|
+	//  | | | | | (_| | | (_|  __/\__ \
+	//  |_|_| |_|\__,_|_|\___\___||___/
+	//                                 
+	async indices(
+		{
+			code,		// This is an index code, not a stock code. See https://jpx.gitbook.io/j-quants-ja/api-reference/indices/indexcodes
+			date,
+			from,
+			to,
+			pagination_key
+		}:
+		{
+			code?:	string;
+			date?:	string | Date | Dayjs;
+			from?:	string | Date | Dayjs;
+			to?: 	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		if( (! code && ! date) || ( code && date ) )
+		{
+			return this.failureResult('indices() requires either "code" or "date", but not both.')
+		}
+
+		if( date && (from || to ) )
+		{
+			return this.failureResult('indices() does not allow "date" and "from"/"to" to be specified at the same time.')
+		}
+
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('If “from” or “to” is used, both must be defined in indices().')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code			){ params['code']			= code }
+		if( from			){ params['from']			= this.toJQDate( from ) }
+		if( to				){ params['to']				= this.toJQDate( to ) }
+		if( date			){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
 		const req: AxiosRequestConfig =

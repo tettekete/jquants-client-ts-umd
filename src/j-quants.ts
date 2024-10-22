@@ -19,6 +19,17 @@ type API_CONFIG_T =
 // 投資部門別情報 - 市場名
 export type INVESTMENT_CATEGORY_T = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
 
+/* 取引カレンダー - 休日区分
+|項目|値|
+|---|---|
+|非営業日				|0|
+|営業日					|1|
+|東証半日立会日			|2|
+|非営業日(祝日取引あり)	|3|
+*/
+export type HOLIDAY_DIVISION_T = 0 | 1 | 2 | 3;
+
+
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
 
@@ -154,6 +165,11 @@ export default class JQuantsAPIHandler
 		markets_breakdown:
 		{
 			path: 'markets/breakdown',
+			method: 'GET'
+		},
+		markets_trading_calendar:
+		{
+			path: 'markets/trading_calendar',
 			method: 'GET'
 		},
 	}
@@ -867,6 +883,60 @@ export default class JQuantsAPIHandler
 
 		return this.returnResult( r );
 	}
+
+	// API: /markets/trading_calendar
+	//                        _        _      _____              _ _              ____      _                _            
+	//   _ __ ___   __ _ _ __| | _____| |_ __|_   _| __ __ _  __| (_)_ __   __ _ / ___|__ _| | ___ _ __   __| | __ _ _ __ 
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __|| || '__/ _` |/ _` | | '_ \ / _` | |   / _` | |/ _ \ '_ \ / _` |/ _` | '__|
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| | | | | | (_| | |__| (_| | |  __/ | | | (_| | (_| | |   
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|_|_| |_|\__, |\____\__,_|_|\___|_| |_|\__,_|\__,_|_|   
+	//                                                                     |___/                                          
+	async marketsTradingCalendar(
+		{
+			holidaydivision,
+			from,
+			to
+		}:
+		{
+			holidaydivision?: HOLIDAY_DIVISION_T;
+			from?:	string | Date | Dayjs;
+			to?:	string | Date | Dayjs;
+		}
+	): Promise<Result>
+	{
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsTradingCalendar().')
+		}
+
+		const params:{
+			holidaydivision?: HOLIDAY_DIVISION_T;
+			from?:	string | Date | Dayjs;
+			to?:	string | Date | Dayjs;
+		} = {};
+		
+		if( holidaydivision	){ params['holidaydivision']	= holidaydivision }
+		if( from			){ params['from']				= this.toJQDate( from ) }
+		if( to				){ params['to']					= this.toJQDate( to ) }
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
+
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

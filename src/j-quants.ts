@@ -177,6 +177,11 @@ export default class JQuantsAPIHandler
 			path: 'indices',
 			method: 'GET'
 		},
+		indices_topix:
+		{
+			path: 'indices/topix',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -1005,7 +1010,47 @@ export default class JQuantsAPIHandler
 		return this.returnResult( r );
 	}
 
+	// API: /indices/topix
+	//   _           _ _              _____           _      
+	//  (_)_ __   __| (_) ___ ___  __|_   _|__  _ __ (_)_  __
+	//  | | '_ \ / _` | |/ __/ _ \/ __|| |/ _ \| '_ \| \ \/ /
+	//  | | | | | (_| | | (_|  __/\__ \| | (_) | |_) | |>  < 
+	//  |_|_| |_|\__,_|_|\___\___||___/|_|\___/| .__/|_/_/\_\
+	//                                         |_|           
+	async indicesTopix(
+		{
+			from,
+			to,
+			pagination_key
+		}:
+		{
+			from?:	string | Date | Dayjs;
+			to?: 	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		const params:{ [key in string]: string} = {};
+		if( from			){ params['from']			= this.toJQDate( from ) }
+		if( to				){ params['to']				= this.toJQDate( to ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
+		const exurl = JQuantsAPIHandler._api_url_maker( 'indices_topix' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

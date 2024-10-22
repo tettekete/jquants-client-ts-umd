@@ -197,6 +197,11 @@ export default class JQuantsAPIHandler
 			path: 'fins/dividend',
 			method: 'GET'
 		},
+		fins_announcement:
+		{
+			path: 'fins/announcement',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -1222,6 +1227,34 @@ export default class JQuantsAPIHandler
 		return this._request_wiith_auth_header(
 			{
 				url: JQuantsAPIHandler._api_url_maker( 'fins_dividend' ),
+				params: params
+			}
+		);
+	}
+
+
+	// API: /fins/announcement
+	//    __ _              _                                                                _   
+	//   / _(_)_ __  ___   / \   _ __  _ __   ___  _   _ _ __   ___ ___ _ __ ___   ___ _ __ | |_ 
+	//  | |_| | '_ \/ __| / _ \ | '_ \| '_ \ / _ \| | | | '_ \ / __/ _ \ '_ ` _ \ / _ \ '_ \| __|
+	//  |  _| | | | \__ \/ ___ \| | | | | | | (_) | |_| | | | | (_|  __/ | | | | |  __/ | | | |_ 
+	//  |_| |_|_| |_|___/_/   \_\_| |_|_| |_|\___/ \__,_|_| |_|\___\___|_| |_| |_|\___|_| |_|\__|
+	//                                                                                           
+	async finsAnnouncement(
+		{
+			pagination_key
+		}:
+		{
+			pagination_key?: string;
+		}
+	)
+	{
+		const params:{ [key in string]: string} = {};
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'fins_announcement' ),
 				params: params
 			}
 		);

@@ -202,6 +202,11 @@ export default class JQuantsAPIHandler
 			path: 'fins/announcement',
 			method: 'GET'
 		},
+		option_index_option:
+		{
+			path: 'option/index_option',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -1259,6 +1264,42 @@ export default class JQuantsAPIHandler
 			}
 		);
 	}
+
+
+	// API: /option/index_option
+	//               _   _             ___           _            ___        _   _             
+	//    ___  _ __ | |_(_) ___  _ __ |_ _|_ __   __| | _____  __/ _ \ _ __ | |_(_) ___  _ __  
+	//   / _ \| '_ \| __| |/ _ \| '_ \ | || '_ \ / _` |/ _ \ \/ / | | | '_ \| __| |/ _ \| '_ \ 
+	//  | (_) | |_) | |_| | (_) | | | || || | | | (_| |  __/>  <| |_| | |_) | |_| | (_) | | | |
+	//   \___/| .__/ \__|_|\___/|_| |_|___|_| |_|\__,_|\___/_/\_\\___/| .__/ \__|_|\___/|_| |_|
+	//        |_|                                                     |_|                      
+	async optionIndexOption(
+		{
+			date,
+			pagination_key
+		}:
+		{
+			date:				string | Date | Dayjs;
+			pagination_key?:	string;
+		}
+	): Promise<Result>
+	{
+		const params:
+		{
+			date:				string;
+			pagination_key?:	string;
+		} = { date: this.toJQDate( date ) }
+
+		if( pagination_key		){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'option_index_option' ),
+				params: params
+			}
+		);
+	}
+
 
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility

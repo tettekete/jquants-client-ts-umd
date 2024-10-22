@@ -192,6 +192,11 @@ export default class JQuantsAPIHandler
 			path: 'fins/fs_details',
 			method: 'GET'
 		},
+		fins_dividend:
+		{
+			path: 'fins/dividend',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -1162,6 +1167,61 @@ export default class JQuantsAPIHandler
 		return this._request_wiith_auth_header(
 			{
 				url: JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ),
+				params: params
+			}
+		);
+	}
+
+
+	// API: /fins/dividend
+	//    __ _           ____  _       _     _                _ 
+	//   / _(_)_ __  ___|  _ \(_)_   _(_) __| | ___ _ __   __| |
+	//  | |_| | '_ \/ __| | | | \ \ / / |/ _` |/ _ \ '_ \ / _` |
+	//  |  _| | | | \__ \ |_| | |\ V /| | (_| |  __/ | | | (_| |
+	//  |_| |_|_| |_|___/____/|_| \_/ |_|\__,_|\___|_| |_|\__,_|
+	//                                                          
+	async finsDividend(
+		{
+			code,
+			date,
+			from,
+			to,
+			pagination_key
+		}:
+		{
+			code?:	string;
+			date?:	string | Date | Dayjs;
+			from?:	string | Date | Dayjs;
+			to?: 	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		if( (! code && ! date) || ( code && date ) )
+		{
+			return this.failureResult('finsDividend() requires either "code" or "date", but not both.')
+		}
+
+		if( date && (from || to ) )
+		{
+			return this.failureResult('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.')
+		}
+
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('If “from” or “to” is used, both must be defined in finsDividend().')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code			){ params['code']			= code }
+		if( from			){ params['from']			= this.toJQDate( from ) }
+		if( to				){ params['to']				= this.toJQDate( to ) }
+		if( date			){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'fins_dividend' ),
 				params: params
 			}
 		);

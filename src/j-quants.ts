@@ -30,6 +30,41 @@ export type INVESTMENT_CATEGORY_T = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJAS
 export type HOLIDAY_DIVISION_T = 0 | 1 | 2 | 3;
 
 
+/* 先物四本値 - 先物商品区分コード
+
+API: /derivatives/futures
+
+|コード|商品区分名称|データ収録期間|
+|---|---|---|
+|TOPIXF|TOPIX先物|2008/5/7〜|
+|TOPIXMF|ミニTOPIX先物|2008/6/16〜|
+|MOTF|マザーズ先物|2016/7/19〜|
+|NKVIF|日経平均VI先物|2012/2/27〜|
+|NKYDF|日経平均・配当指数先物|2010/7/26〜|
+|NK225F|日経225先物|2008/5/7〜|
+|NK225MF|日経225mini先物|2008/5/7〜|
+|JN400F|JPX日経インデックス400先物|2014/11/25〜|
+|REITF|東証REIT指数先物|2008/6/16〜|
+|DJIAF|NYダウ先物|2012/5/28〜|
+|JGBLF|長期国債先物|2008/5/7〜|
+|NK225MCF|日経225マイクロ先物|2023/5/29〜|
+|TOA3MF|TONA3ヶ月金利先物|2023/5/29〜|
+*/
+export type DERIVATIVES_FUTURES_CAT_T	= 'TOPIXF'
+										| 'TOPIXMF'
+										| 'MOTF'
+										| 'NKVIF'
+										| 'NKYDF'
+										| 'NK225F'
+										| 'NK225MF'
+										| 'JN400F'
+										| 'REITF'
+										| 'DJIAF'
+										| 'JGBLF'
+										| 'NK225MCF'
+										| 'TOA3MF'
+										;
+
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
 
@@ -205,6 +240,11 @@ export default class JQuantsAPIHandler
 		option_index_option:
 		{
 			path: 'option/index_option',
+			method: 'GET'
+		},
+		derivatives_futures:
+		{
+			path: 'derivatives/futures',
 			method: 'GET'
 		},
 	}
@@ -1301,6 +1341,44 @@ export default class JQuantsAPIHandler
 	}
 
 
+	// API: /derivatives/futures
+	//       _           _            _   _                _____      _                       
+	//    __| | ___ _ __(_)_   ____ _| |_(_)_   _____  ___|  ___|   _| |_ _   _ _ __ ___  ___ 
+	//   / _` |/ _ \ '__| \ \ / / _` | __| \ \ / / _ \/ __| |_ | | | | __| | | | '__/ _ \/ __|
+	//  | (_| |  __/ |  | |\ V / (_| | |_| |\ V /  __/\__ \  _|| |_| | |_| |_| | | |  __/\__ \
+	//   \__,_|\___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/_|   \__,_|\__|\__,_|_|  \___||___/
+	//                                                                                        
+	async derivativesFutures(
+		{
+			date,
+			category,
+			contract_flag,
+			pagination_key
+
+		}:
+		{
+			date:				string | Date | Dayjs;
+			category?:			DERIVATIVES_FUTURES_CAT_T;
+			contract_flag?:		string;
+			pagination_key?:	string;
+		}
+	): Promise<Result>
+	{
+		const params:{ [key in string]: string} = {};
+
+		params['date']			= this.toJQDate( date );
+
+		if( category		){ params['category']		= category }
+		if( contract_flag	){ params['contract_flag']	= contract_flag }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		return this._request_wiith_auth_header(
+			{
+				url: JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ),
+				params: params
+			}
+		);
+	}
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

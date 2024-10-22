@@ -145,6 +145,11 @@ export default class JQuantsAPIHandler
 			path: 'markets/weekly_margin_interest',
 			method: 'GET'
 		},
+		markets_short_selling:
+		{
+			path: 'markets/short_selling',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -708,31 +713,54 @@ export default class JQuantsAPIHandler
 		const params:{ [key in string]: string} = {};
 		if( code )
 		{
-			params['code'] = code;
-			if( from || to )
-			{
-				if( from && to )
-				{
-					params['from'] = this.toJQDate( from )
-					params['to'] = this.toJQDate( to )
-				}
-				else
-				{
-					return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().');
-				}
-			}
-		}
-		else if( date )
+
+	// API: /markets/short_selling
+	//                        _        _       ____  _                _   ____       _ _ _             
+	//   _ __ ___   __ _ _ __| | _____| |_ ___/ ___|| |__   ___  _ __| |_/ ___|  ___| | (_)_ __   __ _ 
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __\___ \| '_ \ / _ \| '__| __\___ \ / _ \ | | | '_ \ / _` |
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |
+	//                                                                                           |___/ 
+	async marketsShortSelling(
 		{
-			params['date'] = this.toJQDate( date );
+			sector33code,
+			from,
+			to,
+			date,
+			pagination_key
+		}:
+		{
+			sector33code?: string;
+			from?:	string | Date | Dayjs;
+			to?:	string | Date | Dayjs;
+			date?:	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		if( (! sector33code && ! date ) )
+		{
+			return this.failureResult('marketsShortSelling() requires either "code" or "date", or both.')
 		}
 
-		if( pagination_key )
+		if( date && (from || to ) )
 		{
-			params['pagination_key'] = pagination_key;
+			return this.failureResult('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.')
 		}
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('In marketsShortSelling(), if either "from" or "to" is specified, both are required.')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( sector33code		){ params['sector33code']	= sector33code }
+		if( from				){ params['from']			= this.toJQDate( from ) }
+		if( to					){ params['to']				= this.toJQDate( to ) }
+		if( date				){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key		){ params['pagination_key']	= pagination_key }
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_short_selling' );
 		const req: AxiosRequestConfig =
 		{
 			url:	exurl.toString(),
@@ -743,7 +771,7 @@ export default class JQuantsAPIHandler
 			},
 			params: params
 		}
-		
+
 		let r = await this.request_with_axios( req ,(res) => {return res.data });
 
 		return this.returnResult( r );

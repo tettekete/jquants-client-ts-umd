@@ -150,6 +150,11 @@ export default class JQuantsAPIHandler
 			path: 'markets/short_selling',
 			method: 'GET'
 		},
+		markets_breakdown:
+		{
+			path: 'markets/breakdown',
+			method: 'GET'
+		},
 	}
 
 	constructor({
@@ -798,6 +803,69 @@ export default class JQuantsAPIHandler
 		return this.returnResult( r );
 	}
 
+
+	// API: /markets/breakdown
+	//                        _        _           _                    _       _                     
+	//   _ __ ___   __ _ _ __| | _____| |_ ___    | |__  _ __ ___  __ _| | ____| | _____      ___ __  
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __|   | '_ \| '__/ _ \/ _` | |/ / _` |/ _ \ \ /\ / / '_ \ 
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \   | |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/___|_.__/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_|
+	//                                       |_____|                                                  
+	async marketsBreakdown(
+		{
+			code,
+			date,
+			from,
+			to,
+			pagination_key
+		}:
+		{
+			code?:	string;
+			date?:	string | Date | Dayjs;
+			from?:	string | Date | Dayjs;
+			to?: 	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result>
+	{
+		if( (! code && ! date) || ( code && date ) )
+		{
+			return this.failureResult('marketsBreakdown() requires either "code" or "date", but not both.')
+		}
+
+		if( date && (from || to ) )
+		{
+			return this.failureResult('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.')
+		}
+
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsBreakdown().')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code			){ params['code']			= code }
+		if( from			){ params['from']			= this.toJQDate( from ) }
+		if( to				){ params['to']				= this.toJQDate( to ) }
+		if( date			){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
 	// - - - - - - - - - - - - - - - - - - - -
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -

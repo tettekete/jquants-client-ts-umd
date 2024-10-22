@@ -430,7 +430,7 @@ export default class JQuantsAPIHandler
 		refresh_token?:		string | undefined;
 	} = {}): Promise<Result>
 	{
-		let exurl = this.id_token_api_url;
+		const exurl = this.id_token_api_url;
 
 		let _refresh_token = refresh_token ?? this.refresh_token;
 		if(! _refresh_token )
@@ -530,40 +530,30 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?:	string
 		}
-	)
+	): Promise<Result>
 	{
 		// arg pattern validation
-		if( (! code && ! date) && ( code && date ) )
+		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('pricesDailyQuotes() requires "code" or "date"')
+			return this.failureResult('pricesDailyQuotes() requires either "code" or "date", but not both.')
+		}
+
+		if( date && (from || to ) )
+		{
+			return this.failureResult('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.')
+		}
+
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.')
 		}
 
 		const params:{ [key in string]: string} = {};
-		if( code )
-		{
-			params['code'] = code;
-			if( from || to )
-			{
-				if( from && to )
-				{
-					params['from'] = this.toJQDate( from )
-					params['to'] = this.toJQDate( to )
-				}
-				else
-				{
-					return this.failureResult('If “from” or “to” is used, both must be defined in pricesDailyQuotes().');
-				}
-			}
-		}
-		else if( date )
-		{
-			params['date'] = this.toJQDate( date );
-		}
-
-		if( pagination_key )
-		{
-			params['pagination_key'] = pagination_key;
-		}
+		if( code				){ params['code']			= code }
+		if( from				){ params['from']			= this.toJQDate( from ) }
+		if( to					){ params['to']				= this.toJQDate( to ) }
+		if( date				){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
 		const exurl = JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' );
 		const req: AxiosRequestConfig =
@@ -710,9 +700,40 @@ export default class JQuantsAPIHandler
 			return this.failureResult('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.')
 		}
 
-		const params:{ [key in string]: string} = {};
-		if( code )
+		if( date && (from || to ) )
 		{
+			return this.failureResult('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.')
+		}
+
+		if( (from || to) && ( ! from || ! to ) )
+		{
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().')
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code			){ params['code']			= code }
+		if( from			){ params['from']			= this.toJQDate( from ) }
+		if( to				){ params['to']				= this.toJQDate( to ) }
+		if( date			){ params['date']			= this.toJQDate( date ) }
+		if( pagination_key	){ params['pagination_key']	= pagination_key }
+
+		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
+		const req: AxiosRequestConfig =
+		{
+			url:	exurl.toString(),
+			method: exurl.method,
+			headers:
+			{
+				Authorization: this.id_token
+			},
+			params: params
+		}
+		
+		let r = await this.request_with_axios( req ,(res) => {return res.data });
+
+		return this.returnResult( r );
+	}
+
 
 	// API: /markets/short_selling
 	//                        _        _       ____  _                _   ____       _ _ _             

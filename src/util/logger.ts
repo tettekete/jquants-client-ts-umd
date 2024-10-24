@@ -3,7 +3,7 @@ import pino ,{ Logger ,Level } from 'pino';
 
 let loggers:{[key in Level]?: Logger} = {};
 
-export const getLogger = (log_level:Level = "info") =>
+export const getLogger = (log_level:Level = "error") =>
 {
 	if( ! loggers[log_level] )
 	{
@@ -12,7 +12,8 @@ export const getLogger = (log_level:Level = "info") =>
 			transport: {
 			  target: 'pino-pretty',
 			  options: {
-				colorize: true
+				colorize: true,
+				destination: 2
 			  }
 			}
 		});

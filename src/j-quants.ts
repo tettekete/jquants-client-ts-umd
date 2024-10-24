@@ -99,80 +99,6 @@ export default class JQuantsAPIHandler
 	private _refresh_token_TTL	= kRefreshTokenTTL;
 	private _id_token_TTL 		= kIdTokenTTL
 
-	set refresh_token_ttl( ttl: number )
-	{
-		this._refresh_token_TTL = ttl
-	}
-
-	get refresh_token_ttl(): number
-	{
-		return this._refresh_token_TTL ?? kRefreshTokenTTL;
-	}
-
-	set id_token_ttl( ttl: number )
-	{
-		this._id_token_TTL = ttl;
-	}
-
-	get id_token_ttl(): number
-	{
-		return this._id_token_TTL ?? kIdTokenTTL;
-	}
-
-	set token_store( token_srore: APITokenStore )
-	{
-		this._token_store = token_srore;
-	}
-
-	get token_store(): APITokenStore | undefined
-	{
-		return this._token_store;
-	}
-
-	set refresh_token( token: TOKEN_RECORD | undefined )
-	{
-		this._refresh_token = token
-	}
-	
-	get refresh_token(): string | undefined
-	{
-		// レコードが登録されていて期限切れで無ければトークンを返す
-		if( this._refresh_token )
-		{
-			const expiration = dayjs( this._refresh_token.expiration );
-			if( dayjs().isBefore( expiration ) )
-			{
-				return this._refresh_token.token;
-			}
-		}
-		return undefined;
-	};
-
-	set id_token( token: TOKEN_RECORD | undefined )
-	{
-		this._id_token = token
-	};
-
-	get id_token(): string | undefined
-	{
-		// レコードが登録されていて期限切れで無ければトークンを返す
-		if( this._id_token )
-		{
-			const expiration = dayjs( this._id_token.expiration );
-			if( dayjs().isBefore( expiration ) )
-			{
-				return this._id_token.token;
-			}
-		}
-		return undefined;
-	};
-
-	get last_result(): Result | undefined
-	{
-		return this._last_result;
-	}
-
-
 	private static readonly baseURL = new ExURL('https://api.jquants.com/v1/');
 	private static readonly URLs: {	[key: string]: API_CONFIG_T } =
 	{
@@ -273,25 +199,140 @@ export default class JQuantsAPIHandler
 		},
 	}
 
+	// - - - - - - - - - - - - - - - - - - - -
+	// common getter / setter
+	// - - - - - - - - - - - - - - - - - - - -
+	set refresh_token_ttl( ttl: number )
+	{
+		this._refresh_token_TTL = ttl
+	}
+
+	get refresh_token_ttl(): number
+	{
+		return this._refresh_token_TTL ?? kRefreshTokenTTL;
+	}
+
+	set id_token_ttl( ttl: number )
+	{
+		this._id_token_TTL = ttl;
+	}
+
+	get id_token_ttl(): number
+	{
+		return this._id_token_TTL ?? kIdTokenTTL;
+	}
+
+	set token_store( token_srore: APITokenStore )
+	{
+		this._token_store = token_srore;
+	}
+
+	get token_store(): APITokenStore | undefined
+	{
+		return this._token_store;
+	}
+
+	set refresh_token( token: TOKEN_RECORD | undefined )
+	{
+		this._refresh_token = token
+	}
+	
+	get refresh_token(): string | undefined
+	{
+		// レコードが登録されていて期限切れで無ければトークンを返す
+		if( this._refresh_token )
+		{
+			const expiration = dayjs( this._refresh_token.expiration );
+			if( dayjs().isBefore( expiration ) )
+			{
+				return this._refresh_token.token;
+			}
+		}
+		return undefined;
+	};
+
+	set id_token( token: TOKEN_RECORD | undefined )
+	{
+		this._id_token = token
+	};
+
+	get id_token(): string | undefined
+	{
+		// レコードが登録されていて期限切れで無ければトークンを返す
+		if( this._id_token )
+		{
+			const expiration = dayjs( this._id_token.expiration );
+			if( dayjs().isBefore( expiration ) )
+			{
+				return this._id_token.token;
+			}
+		}
+		return undefined;
+	};
+
+	get last_result(): Result | undefined
+	{
+		return this._last_result;
+	}
+
+	// - - - - - - - - - - - - - - - - - - - -
+	// API URLs getter
+	// - - - - - - - - - - - - - - - - - - - -
+
+	get refresh_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'refresh_api' ) }
+	get id_token_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'id_token_api' ) }
+	get listed_info_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'listed_info' ) }
+	get prices_daily_quotes_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' ) }
+	get prices_prices_am_api_url()
+								{ return  JQuantsAPIHandler._api_url_maker( 'prices_prices_am' ) }
+	get markets_trades_spec_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' ) }
+	get markets_weekly_margin_interest_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' ) }
+	get markets_short_selling_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'markets_short_selling' ) }
+	get markets_breakdown_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'markets_breakdown' ) }
+	get markets_trading_calendar_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' ) }
+	get indices_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'indices' ) }
+	get indices_topix_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'indices_topix' ) }
+	get fins_statements_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'fins_statements' ) }
+	get fins_fs_details_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ) }
+	get fins_dividend_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'fins_dividend' ) }
+	get fins_announcement_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'fins_announcement' ) }
+	get optionIndexOption_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'option_index_option' ) }
+	get derivatives_futures_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ) }
+	get derivatives_options_api_url()
+								{ return JQuantsAPIHandler._api_url_maker( 'derivatives_options' ) }
+
+
+	
+	//                       _                   _             
+	//    ___ ___  _ __  ___| |_ _ __ _   _  ___| |_ ___  _ __ 
+	//   / __/ _ \| '_ \/ __| __| '__| | | |/ __| __/ _ \| '__|
+	//  | (_| (_) | | | \__ \ |_| |  | |_| | (__| || (_) | |   
+	//   \___\___/|_| |_|___/\__|_|   \__,_|\___|\__\___/|_|   
+	//                                                         
 	constructor({
 		email,
 		password,
-		// refresh_token,
-		// id_token
 		token_store = new DefaultAPITokenStore()
 	}:
 	{
 		email			?: string | undefined;
 		password		?: string | undefined;
-		// refresh_token	?: string | undefined,
-		// id_token		?: string | undefined
 		token_store		?: APITokenStore
 	} = {})
 	{
 		this._auth_email	= email;
 		this._auth_password	= password;
-		// this._refresh_token	= refresh_token;
-		// this._id_token		= id_token;
 		this._token_store	= token_store;
 	}
 
@@ -311,16 +352,10 @@ export default class JQuantsAPIHandler
 		return api_url;
 	}
 
-	get refresh_api_url()
-	{
-		return JQuantsAPIHandler._api_url_maker( 'refresh_api' );
-	}
 
-	get id_token_api_url()
-	{
-		return JQuantsAPIHandler._api_url_maker( 'id_token_api' );
-	}
-	
+	// - - - - - - - - - - - - - - - - - - - -
+	// axios utilities
+	// - - - - - - - - - - - - - - - - - - - -
 	//                                  _              _ _   _                   _           
 	//   _ __ ___  __ _ _   _  ___  ___| |_  __      _(_) |_| |__      __ ___  _(_) ___  ___ 
 	//  | '__/ _ \/ _` | | | |/ _ \/ __| __| \ \ /\ / / | __| '_ \    / _` \ \/ / |/ _ \/ __|
@@ -338,7 +373,8 @@ export default class JQuantsAPIHandler
 		{
 			lg.trace(`request_with_axios: ${req.method} ${req.url}`);
 			const res: AxiosResponse = await axios( req );
-			
+
+			lg.trace(`request path: ${res.request.path}`);
 			lg.trace(`status: ${res.status} ${res.statusText}`);
 
 			let data = extractor( res );
@@ -380,8 +416,12 @@ export default class JQuantsAPIHandler
 			headers:
 			{
 				Authorization: this.id_token
-			},
-			params: params
+			}
+		}
+
+		if( Object.keys(params).length )
+		{
+			req['params'] = params;
 		}
 
 		let r = await this.request_with_axios( req ,(res) => {return res.data });
@@ -627,32 +667,18 @@ export default class JQuantsAPIHandler
 	//                                             
 	async listedInfo({code , date}:{code?: string, date?: string | Date | Dayjs } = {})
 	{
-		const exurl = JQuantsAPIHandler._api_url_maker( 'listed_info' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			}
-		}
-
 		const params:{code?: string, date?: string } = {};
-		if( code ) { params['code'] = code }
-		if( date )
-		{
-			params['date'] = this.toJQDate( date );
-		}
+		if( code ){ params['code'] = code }
+		if( date ){ params['date'] = this.toJQDate( date ) }
 
-		if( Object.keys(params).length )
-		{
-			req['params'] = params;
-		}
-
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.listed_info_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -703,21 +729,14 @@ export default class JQuantsAPIHandler
 		if( date				){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
-
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.prices_daily_quotes_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -734,7 +753,7 @@ export default class JQuantsAPIHandler
 	 * pagination_key is an argument for pagination, and if it was included in
 	 * the previous search results, it is a parameter for obtaining the continuation.
 	 * 
-	 * NOTE: To use this function, you need to subscribe to a paid plan.
+	 * NOTE: To use this feature, you must subscribe to the Premium Plan.
 	 *
 	 * @async
 	 * @function pricesPricesAm
@@ -752,26 +771,18 @@ export default class JQuantsAPIHandler
 		pagination_key?: string
 	}): Promise<Result>
 	{
-		const exurl = JQuantsAPIHandler._api_url_maker( 'prices_prices_am' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			}
-		}
-
 		const params:{code?: string, pagination_key?: string } = {};
 		if( code )				{ params['code'] = code }
 		if( pagination_key )	{ params['pagination_key'] = pagination_key }
 
-		req['params'] = params;
-
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.prices_prices_am_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 	// API: /markets/trades_spec
@@ -789,33 +800,25 @@ export default class JQuantsAPIHandler
 		}
 		:{
 			section?: INVESTMENT_CATEGORY_T;
-			from?: string;
-			to?: string;
+			from?: string | Date | Dayjs;
+			to?: string | Date | Dayjs;
 		} = {}
 	): Promise<Result>
 	{
-		const params:
-		{
-			section?: INVESTMENT_CATEGORY_T;
-			from?: string;
-			to?: string;
-		} = {};
+		const params:{ [key in string]: string} = {};
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
+		if( section	){ params['section']	= section }
+		if( from	){ params['from']		= this.toJQDate( from ) }
+		if( to		){ params['to']			= this.toJQDate( to ) }
 
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.markets_trades_spec_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 	// API: /markets/weekly_margin_interest
@@ -864,22 +867,15 @@ export default class JQuantsAPIHandler
 		if( to				){ params['to']				= this.toJQDate( to ) }
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
-
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
 		
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.markets_weekly_margin_interest_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -929,21 +925,14 @@ export default class JQuantsAPIHandler
 		if( date				){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_short_selling' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
-
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.markets_short_selling_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -992,22 +981,15 @@ export default class JQuantsAPIHandler
 		if( to				){ params['to']				= this.toJQDate( to ) }
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
-
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_breakdown' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
 		
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.markets_breakdown_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 	// API: /markets/trading_calendar
@@ -1037,29 +1019,22 @@ export default class JQuantsAPIHandler
 
 		const params:{
 			holidaydivision?: HOLIDAY_DIVISION_T;
-			from?:	string | Date | Dayjs;
-			to?:	string | Date | Dayjs;
+			from?:	string;
+			to?:	string;
 		} = {};
 
-		if( holidaydivision	){ params['holidaydivision']	= holidaydivision }
+		if( typeof holidaydivision === 'number' ){ params['holidaydivision']	= holidaydivision }
 		if( from			){ params['from']				= this.toJQDate( from ) }
 		if( to				){ params['to']					= this.toJQDate( to ) }
-
-		const exurl = JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
 		
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.markets_trading_calendar_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -1108,22 +1083,15 @@ export default class JQuantsAPIHandler
 		if( to				){ params['to']				= this.toJQDate( to ) }
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
-
-		const exurl = JQuantsAPIHandler._api_url_maker( 'indices' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
 		
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.indices_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 	// API: /indices/topix
@@ -1150,22 +1118,15 @@ export default class JQuantsAPIHandler
 		if( from			){ params['from']			= this.toJQDate( from ) }
 		if( to				){ params['to']				= this.toJQDate( to ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
-
-		const exurl = JQuantsAPIHandler._api_url_maker( 'indices_topix' );
-		const req: AxiosRequestConfig =
-		{
-			url:	exurl.toString(),
-			method: exurl.method,
-			headers:
-			{
-				Authorization: this.id_token
-			},
-			params: params
-		}
 		
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
-
-		return this.returnResult( r );
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.indices_topix_api_url,
+					params: params
+				}
+			)
+		);
 	}
 
 
@@ -1199,11 +1160,13 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'fins_statements' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.fins_statements_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1238,11 +1201,13 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.fins_fs_details_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1293,11 +1258,13 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'fins_dividend' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.fins_dividend_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1321,11 +1288,13 @@ export default class JQuantsAPIHandler
 		const params:{ [key in string]: string} = {};
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'fins_announcement' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.fins_announcement_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1356,11 +1325,13 @@ export default class JQuantsAPIHandler
 
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'option_index_option' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.optionIndexOption_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1396,11 +1367,13 @@ export default class JQuantsAPIHandler
 		if( contract_flag	){ params['contract_flag']	= contract_flag }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.derivatives_futures_api_url,
+					params: params
+				}
+			)
 		);
 	}
 
@@ -1440,11 +1413,13 @@ export default class JQuantsAPIHandler
 		if( contract_flag	){ params['contract_flag']	= contract_flag }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this._request_wiith_auth_header(
-			{
-				url: JQuantsAPIHandler._api_url_maker( 'derivatives_options' ),
-				params: params
-			}
+		return this.returnResult(
+			await this._request_wiith_auth_header(
+				{
+					url: this.derivatives_options_api_url,
+					params: params
+				}
+			)
 		);
 	}
 

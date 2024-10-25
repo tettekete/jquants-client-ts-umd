@@ -3,12 +3,11 @@ import Result ,{ResultMakerArgsT} from '@tettekete/result';
 import { getLogger } from './util/logger';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs ,{Dayjs} from 'dayjs';
+import pino from 'pino';
 
 import { DefaultAPITokenStore } from './j-quants/DefaultAPITokenStore';
-import { APITokenStore ,TOKEN_RECORD } from './j-quants/Types';
+import { APITokenStore ,TOKEN_RECORD ,Logger_T} from './j-quants/Types';
 export { APITokenStore } from './j-quants/Types';
-
-const lg = getLogger("trace");
 
 type API_CONFIG_T =
 {
@@ -89,6 +88,7 @@ const kIdTokenTTL		= 24 * 3600;
 
 export default class JQuantsAPIHandler
 {
+	logger: Logger_T;
 	private _refresh_token	: TOKEN_RECORD | undefined;
 	private _id_token		: TOKEN_RECORD | undefined;
 	private _auth_email		: string | undefined;
@@ -275,6 +275,12 @@ export default class JQuantsAPIHandler
 		return this._last_result;
 	}
 
+	// alias for accessing logger with a short name
+	get lg(): Logger_T
+	{
+		return this.logger;
+	}
+
 	// - - - - - - - - - - - - - - - - - - - -
 	// API URLs getter
 	// - - - - - - - - - - - - - - - - - - - -
@@ -323,17 +329,21 @@ export default class JQuantsAPIHandler
 	constructor({
 		email,
 		password,
-		token_store = new DefaultAPITokenStore()
+		token_store = new DefaultAPITokenStore(),
+		log_level = 'error'
 	}:
 	{
 		email			?: string | undefined;
 		password		?: string | undefined;
 		token_store		?: APITokenStore
+		log_level		?: pino.Level
 	} = {})
 	{
 		this._auth_email	= email;
 		this._auth_password	= password;
 		this._token_store	= token_store;
+
+		this.logger = getLogger( log_level );
 	}
 
 	private static _api_url_maker( url_for: string ): ExURL
@@ -371,16 +381,16 @@ export default class JQuantsAPIHandler
 		let result: Result;
 		try
 		{
-			lg.trace(`request_with_axios: ${req.method} ${req.url}`);
+			this.lg.trace(`request_with_axios: ${req.method} ${req.url}`);
 			const res: AxiosResponse = await axios( req );
 
-			lg.trace(`request path: ${res.request.path}`);
-			lg.trace(`status: ${res.status} ${res.statusText}`);
+			this.lg.trace(`request path: ${res.request.path}`);
+			this.lg.trace(`status: ${res.status} ${res.statusText}`);
 
 			let data = extractor( res );
 			result = Result.success( data );
 
-			lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
+			this.lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
 		}
 		catch (e: unknown )
 		{
@@ -487,7 +497,7 @@ export default class JQuantsAPIHandler
 		{
 			if( ! this.refresh_token )
 			{
-				lg.trace('Update the Refresh and Token ID Token.');
+				this.lg.trace('Update the Refresh and Token ID Token.');
 
 				let r = await this.getRefreshToken({
 						email: _email ,
@@ -510,7 +520,7 @@ export default class JQuantsAPIHandler
 			}
 			else
 			{
-				lg.trace('Update the ID Token using a valid Refresh Token.');
+				this.lg.trace('Update the ID Token using a valid Refresh Token.');
 
 				const r = await this.getIDToken();
 				if( r.ng )
@@ -521,7 +531,7 @@ export default class JQuantsAPIHandler
 		}
 		else
 		{
-			lg.trace('Use the ID Token already received.')
+			this.lg.trace('Use the ID Token already received.')
 		}
 
 		return this.successResult();

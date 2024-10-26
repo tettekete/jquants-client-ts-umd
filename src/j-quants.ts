@@ -6,7 +6,8 @@ import dayjs ,{Dayjs} from 'dayjs';
 import pino from 'pino';
 
 import { DefaultAPITokenStore } from './j-quants/DefaultAPITokenStore';
-import { APITokenStore ,TOKEN_RECORD ,Logger_T} from './j-quants/Types';
+import { DefaultCredsStore } from './j-quants/DefaultCredentialStore';
+import { APITokenStore ,TOKEN_RECORD ,Logger_T, JQCredentialStore} from './j-quants/Types';
 export { APITokenStore } from './j-quants/Types';
 
 type API_CONFIG_T =
@@ -91,8 +92,8 @@ export default class JQuantsAPIHandler
 	logger: Logger_T;
 	private _refresh_token	: TOKEN_RECORD | undefined;
 	private _id_token		: TOKEN_RECORD | undefined;
-	private _auth_email		: string | undefined;
-	private _auth_password	: string | undefined;
+
+	private _creds_store	: JQCredentialStore;
 	private _token_store	: APITokenStore;
 	private _last_result	: Result | undefined;
 
@@ -327,20 +328,17 @@ export default class JQuantsAPIHandler
 	//   \___\___/|_| |_|___/\__|_|   \__,_|\___|\__\___/|_|   
 	//                                                         
 	constructor({
-		email,
-		password,
+		creds_store = new DefaultCredsStore(),
 		token_store = new DefaultAPITokenStore(),
 		log_level = 'error'
 	}:
 	{
-		email			?: string | undefined;
-		password		?: string | undefined;
-		token_store		?: APITokenStore
-		log_level		?: pino.Level
+		creds_store		?: JQCredentialStore;
+		token_store		?: APITokenStore;
+		log_level		?: pino.Level;
 	} = {})
 	{
-		this._auth_email	= email;
-		this._auth_password	= password;
+		this._creds_store	= creds_store;
 		this._token_store	= token_store;
 
 		this.logger = getLogger( log_level );
@@ -384,7 +382,7 @@ export default class JQuantsAPIHandler
 			this.lg.trace(`request_with_axios: ${req.method} ${req.url}`);
 			const res: AxiosResponse = await axios( req );
 
-			this.lg.trace(`request path: ${res.request.path}`);
+			this.lg.trace(`request path: ${res.hasOwnProperty('request') ? res.request.path : 'unknown'}`);
 			this.lg.trace(`status: ${res.status} ${res.statusText}`);
 
 			let data = extractor( res );
@@ -462,19 +460,10 @@ export default class JQuantsAPIHandler
 			-> 完了
 	*/
 	
-	async refreshTokens(
-		{
-			email,
-			password
-		}:
-		{
-			email		?: string | undefined;
-			password	?: string | undefined;
-		} = {}
-	): Promise<Result>
+	async refreshTokens(): Promise<Result>
 	{
-		let _email		= email ?? this._auth_email;
-		let _password	= password ?? this._auth_password;
+		let _email		= this._creds_store.user();
+		let _password	= this._creds_store.password();
 
 		if( ! _email || ! _password )
 		{
@@ -499,10 +488,7 @@ export default class JQuantsAPIHandler
 			{
 				this.lg.trace('Update the Refresh and Token ID Token.');
 
-				let r = await this.getRefreshToken({
-						email: _email ,
-						password: _password
-				});
+				let r = await this.getRefreshToken();
 
 				if( r.ok )
 				{
@@ -553,19 +539,11 @@ export default class JQuantsAPIHandler
 	 * @param param0 
 	 * @returns 
 	 */
-	async getRefreshToken(
+	async getRefreshToken(): Promise<Result>
 	{
-		email,
-		password,
-	}
-	:{
-		email		?: string | undefined,
-		password	?: string | undefined,
-	} = {}): Promise<Result>
-	{
-		let exurl = this.refresh_api_url;
-		let _email = email ?? this._auth_email;
-		let _pw = password ?? this._auth_password;
+		let exurl	= this.refresh_api_url;
+		let _email	= this._creds_store.user();
+		let _pw		= this._creds_store.password();
 
 		if( ! _email || ! _pw )
 		{

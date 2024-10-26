@@ -16,7 +16,7 @@ export class DefaultCredsStore extends JQCredentialStore
 		}:
 		{
 			env_file?: string;
-		}
+		} = {}
 	)
 	{
 		super();

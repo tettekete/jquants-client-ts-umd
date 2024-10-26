@@ -1,12 +1,9 @@
 import {jest,describe, expect, test} from '@jest/globals';
 import axios, { AxiosInstance,AxiosResponse ,InternalAxiosRequestConfig ,AxiosRequestConfig} from 'axios';
 
-import os from 'os';
-import path from 'path';
-import { pid } from 'node:process';
-
-import { DefaultAPITokenStore } from '../src/j-quants/DefaultAPITokenStore';
 import JQH from '../src/j-quants'
+import { OnMemoryCredsStore } from '../src/j-quants/OnMemoryCredsStore';
+import { OnMemoryTokenStore } from '../src/j-quants/OnMemoryTokenStore';
 
 import MockAdapter from 'axios-mock-adapter';
 
@@ -40,21 +37,18 @@ mock
 
 
 // 一旦 jqh インスタンスを作成します
+const credsStore = new OnMemoryCredsStore({user: 'foo@example.com' , password: 'password' });
+const tokenStore = new OnMemoryTokenStore();
+
 const jqh = new JQH({
-	email:'foo@example.com',
-	password:'password'
+	creds_store: credsStore,
+	token_store: tokenStore
 });
 
 // 各有効期限をテスト用に設定
 jqh.refresh_token_ttl = 4;
 jqh.id_token_ttl = 2
 
-// DefaultAPITokenStore がシステムテンポラリに yaml ファイルを作るように調整します。
-const YAML_FILE = "tokens-db.yaml";
-let yaml_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
-let yaml_temp_path:string = path.join( yaml_temp_dir , YAML_FILE );
-
-( jqh.token_store as DefaultAPITokenStore ).yaml_file = yaml_temp_path;
 
 // 期限切れシミュレートのための sleep 関数
 const sleep = async (sec:number) => {

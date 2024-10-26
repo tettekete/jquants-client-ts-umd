@@ -15,6 +15,13 @@ export abstract class APITokenStore
 	abstract set_id_token_info({token,expiration}:TOKEN_RECORD):void;
 }
 
+export abstract class JQCredentialStore
+{
+	abstract user():string;
+	abstract password():string;
+}
+
+
 export interface Logger_T {
   trace(message: string, ...args: any[]): void;
   debug(message: string, ...args: any[]): void;

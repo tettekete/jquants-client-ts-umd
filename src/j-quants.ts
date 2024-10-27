@@ -511,7 +511,7 @@ export default class JQuantsAPIHandler
 		{
 			if( ! this.refresh_token )
 			{
-				this.lg.trace('Update the Refresh and Token ID Token.');
+				this.lg.trace('Update the Refresh Token and ID Token.');
 
 				let r = await this.getRefreshToken();
 

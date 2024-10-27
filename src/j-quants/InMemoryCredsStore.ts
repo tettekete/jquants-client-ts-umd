@@ -2,7 +2,7 @@
 
 import { JQCredentialStore } from './Types';
 
-export class OnMemoryCredsStore extends JQCredentialStore
+export class InMemoryCredsStore extends JQCredentialStore
 {
 	private _user: string | undefined;
 	private _password: string | undefined;

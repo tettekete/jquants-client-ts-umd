@@ -5,11 +5,11 @@ import JQH from '../src/j-quants'
 
 import { Dayjs } from 'dayjs';
 
-import { OnMemoryCredsStore } from '../src/j-quants/OnMemoryCredsStore';
-import { OnMemoryTokenStore } from '../src/j-quants/OnMemoryTokenStore';
+import { InMemoryCredsStore } from '../src/j-quants/InMemoryCredsStore';
+import { InMemoryTokenStore } from '../src/j-quants/InMemoryTokenStore';
 
-const credsStore = new OnMemoryCredsStore({user: 'foo@example.com' , password: 'password' });
-const tokenStore = new OnMemoryTokenStore();
+const credsStore = new InMemoryCredsStore({user: 'foo@example.com' , password: 'password' });
+const tokenStore = new InMemoryTokenStore();
 
 
 jest.mock('axios');

@@ -2,7 +2,7 @@
 import { APITokenStore, TOKEN_RECORD } from './Types';
 import { Dayjs } from 'dayjs';
 
-export class OnMemoryTokenStore extends APITokenStore
+export class InMemoryTokenStore extends APITokenStore
 {
 	private refresh_token: string | undefined = undefined;
 	private refresh_token_expire: Dayjs | undefined = undefined;

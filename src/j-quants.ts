@@ -1270,7 +1270,7 @@ export default class JQuantsAPIHandler
 		}:
 		{
 			pagination_key?: string;
-		}
+		} = {}
 	)
 	{
 		const params:{ [key in string]: string} = {};

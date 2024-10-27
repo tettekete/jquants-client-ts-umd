@@ -97,6 +97,8 @@ export default class JQuantsAPIHandler
 	private _token_store	: APITokenStore;
 	private _last_result	: Result | undefined;
 
+	private _auto_token_refresh: boolean;
+
 	private _refresh_token_TTL	= kRefreshTokenTTL;
 	private _id_token_TTL 		= kIdTokenTTL
 
@@ -276,6 +278,17 @@ export default class JQuantsAPIHandler
 		return this._last_result;
 	}
 
+	set auto_token_refresh( is_enabled: boolean)
+	{
+		this._auto_token_refresh = is_enabled;
+	}
+
+	get auto_token_refresh(): boolean
+	{
+		return this._auto_token_refresh
+	}
+	
+
 	// alias for accessing logger with a short name
 	get lg(): Logger_T
 	{
@@ -330,18 +343,21 @@ export default class JQuantsAPIHandler
 	constructor({
 		creds_store = new DefaultCredsStore(),
 		token_store = new DefaultAPITokenStore(),
-		log_level = 'error'
+		log_level = 'error',
+		auto_token_refresh = true
 	}:
 	{
 		creds_store		?: JQCredentialStore;
 		token_store		?: APITokenStore;
 		log_level		?: pino.Level;
+		auto_token_refresh?: boolean
 	} = {})
 	{
 		this._creds_store	= creds_store;
 		this._token_store	= token_store;
 
 		this.logger = getLogger( log_level );
+		this._auto_token_refresh = auto_token_refresh
 	}
 
 	private static _api_url_maker( url_for: string ): ExURL
@@ -417,6 +433,15 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<Result>
 	{
+		if( this._auto_token_refresh )
+		{
+			let r = await this.refreshTokens();
+			if( r.ng )
+			{
+				return this.returnResult( r );
+			}
+		}
+
 		const req: AxiosRequestConfig =
 		{
 			url:	url.toString(),

@@ -1,7 +1,7 @@
 {
   "name": "jquants-api-test",
   "version": "1.0.0",
-  "main": "dist/index.js",
+  "main": "dist/j-quants.js",
   "type": "commonjs",
   "files": [
     "dist"

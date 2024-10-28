@@ -3,3 +3,6 @@ credentials.yaml
 /_misc
 /.tsimp
 /dist/
+.env
+tokens-db.yaml
+

@@ -1,7 +1,7 @@
 import {jest,describe, expect, test} from '@jest/globals';
 import axios, { AxiosInstance,AxiosResponse ,InternalAxiosRequestConfig ,AxiosRequestConfig} from 'axios';
 
-import JQH from '../src/j-quants'
+import JQH from '../src/j-quants';
 import { InMemoryCredsStore } from '../src/j-quants/InMemoryCredsStore';
 import { InMemoryTokenStore } from '../src/j-quants/InMemoryTokenStore';
 
@@ -47,13 +47,14 @@ const jqh = new JQH({
 
 // 各有効期限をテスト用に設定
 jqh.refresh_token_ttl = 4;
-jqh.id_token_ttl = 2
+jqh.id_token_ttl = 2;
 
 
 // 期限切れシミュレートのための sleep 関数
-const sleep = async (sec:number) => {
+const sleep = async (sec:number) =>
+{
     return new Promise(resolve => setTimeout(resolve, sec * 1000));
-}
+};
 
 
 describe('JQH refreshTokens tests',()=>
@@ -66,7 +67,7 @@ describe('JQH refreshTokens tests',()=>
 			expect( jqh.refresh_token ).toBe( '<YOUR refreshToken>.0' );
 			expect( jqh.id_token ).toBe( '<ID token>.0' );
 
-			expect( (await jqh.refreshTokens()).ok ).toBeTruthy;
+			expect( (await jqh.refreshTokens()).ok ).toBeTruthy();
 			expect( jqh.id_token ).toBe( '<ID token>.0' );
 		});
 
@@ -137,4 +138,4 @@ describe('JQH refreshTokens tests',()=>
 			expect( jqh.id_token ).toBe( '<ID token>.2' );
 		});
 	});
-})
+});

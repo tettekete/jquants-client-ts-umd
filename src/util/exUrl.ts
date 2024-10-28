@@ -8,11 +8,14 @@ export type HTTP_METHODS_T = "GET"
 					| "TRACE"
 					| "PATCH"
 					| "OPTIONS"
+					;
 
-export default class ExUrl extends URL {
-	protected _method: HTTP_METHODS_T = "GET"
+export default class ExUrl extends URL
+{
+	protected _method: HTTP_METHODS_T = "GET";
 
-	constructor(url: string, base?: string) {
+	constructor(url: string, base?: string)
+	{
 		super(url, base);
 	}
 
@@ -23,18 +26,20 @@ export default class ExUrl extends URL {
 
 	get method(): HTTP_METHODS_T
 	{
-		return this._method
+		return this._method;
 	}
 
 	// clone メソッドを追加して新しい URL インスタンスを返す
-	public clone(): ExUrl {
+	public clone(): ExUrl
+	{
 		const cloned = new ExUrl(this.toString());
 		cloned.method = this.method;
 		return cloned;
 	}
 
 	// withPath メソッドを追加してパスを追加した新しい URL を返す
-	public withPath(path: string): ExUrl {
+	public withPath(path: string): ExUrl
+	{
 		const cloned = this.clone();
 		if( ! cloned.pathname.match(/\/$/) )
 		{

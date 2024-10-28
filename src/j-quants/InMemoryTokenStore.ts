@@ -20,27 +20,30 @@ export class InMemoryTokenStore extends APITokenStore
 			token: this.refresh_token,
 			expiration: this.refresh_token_expire
 
-		} as TOKEN_RECORD
+		} as TOKEN_RECORD;
 	}
 
-	set_refresh_token_info({ token, expiration }: TOKEN_RECORD): void {
+	set_refresh_token_info({ token, expiration }: TOKEN_RECORD): void
+	{
 		this.refresh_token = token;
 		this.refresh_token_expire = expiration;
 	}
 
-	get_id_token_info(): TOKEN_RECORD | undefined {
+	get_id_token_info(): TOKEN_RECORD | undefined
+	{
 		if( ! this.id_token || ! this.id_token_expire )
 		{
-			return undefined
+			return undefined;
 		}
 
 		return {
 			token: this.id_token,
 			expiration: this.id_token_expire
-		}
+		};
 	}
 
-	set_id_token_info({ token, expiration }: TOKEN_RECORD): void {
+	set_id_token_info({ token, expiration }: TOKEN_RECORD): void
+	{
 		this.id_token = token;
 		this.id_token_expire = expiration;
 	}

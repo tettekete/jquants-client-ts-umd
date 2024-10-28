@@ -1,6 +1,6 @@
 import {jest,describe, expect, test} from '@jest/globals';
 import axios, { AxiosInstance,AxiosResponse ,InternalAxiosRequestConfig} from 'axios';
-import JQH from '../src/j-quants'
+import JQH from '../src/j-quants';
 
 
 import { Dayjs } from 'dayjs';
@@ -26,7 +26,7 @@ const response: AxiosResponse = {
 	{
 		refreshToken: "<YOUR refreshToken>"
 	}
-}
+};
 
 const axiosMock = axios as jest.Mocked<typeof axios>;
 axiosMock.mockResolvedValue( response );
@@ -38,17 +38,17 @@ describe('Get tokens',()=>
 	{
 		axiosMock.mockResolvedValue( {data: {refreshToken: "<YOUR refreshToken>"}} );
 		
-		let jqh = new JQH(
+		const jqh = new JQH(
 			{
 				creds_store: credsStore,
 				token_store: tokenStore
 			}
 		);
-		let promise = jqh.getRefreshToken();
+		const promise = jqh.getRefreshToken();
 		
 		promise.then( (r) =>
 			{
-				expect( r.ok ).toBeTruthy;
+				expect( r.ok ).toBeTruthy();
 				expect( r.data ).toBe( "<YOUR refreshToken>" );
 
 				expect( jqh.refresh_token ).toBe( "<YOUR refreshToken>" );
@@ -60,25 +60,25 @@ describe('Get tokens',()=>
 	{
 		axiosMock.mockResolvedValue( {data: {idToken: "<ID token>"}} );
 		
-		let jqh = new JQH(
+		const jqh = new JQH(
 			{
 				creds_store: credsStore,
 				token_store: tokenStore
 			}
 		);
-		let promise = jqh.getIDToken({
+		const promise = jqh.getIDToken({
 						refresh_token: "<My refreshToken>"
 				});
 		
 		promise.then( (r) =>
 			{
-				expect( r.ok ).toBeTruthy;
+				expect( r.ok ).toBeTruthy();
 				expect( r.data ).toBe( "<ID token>" );
 
 				expect( jqh.id_token ).toBe( "<ID token>" );
 			});
 	});
-})
+});
 
 
 	

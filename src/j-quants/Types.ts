@@ -5,7 +5,7 @@ export type TOKEN_RECORD =
 {
 	token: string;
 	expiration: Dayjs;
-}
+};
 
 export abstract class APITokenStore
 {
@@ -22,11 +22,12 @@ export abstract class JQCredentialStore
 }
 
 
-export interface Logger_T {
-  trace(message: string, ...args: any[]): void;
-  debug(message: string, ...args: any[]): void;
-  info(message: string, ...args: any[]): void;
-  warn(message: string, ...args: any[]): void;
-  error(message: string, ...args: any[]): void;
-  fatal(message: string, ...args: any[]): void;
+export interface Logger_T
+{
+  trace(message: string, ...args: unknown[]): void;
+  debug(message: string, ...args: unknown[]): void;
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
+  fatal(message: string, ...args: unknown[]): void;
 }

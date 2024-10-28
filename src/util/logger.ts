@@ -1,7 +1,7 @@
 
 import pino ,{ Logger ,Level } from 'pino';
 
-let loggers:{[key in Level]?: Logger} = {};
+const loggers:{[key in Level]?: Logger} = {};
 
 export const getLogger = (log_level:Level = "error") =>
 {
@@ -20,5 +20,5 @@ export const getLogger = (log_level:Level = "error") =>
 	}
 
 	return loggers[log_level];
-}
+};
 

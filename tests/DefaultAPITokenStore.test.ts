@@ -9,8 +9,8 @@ import { TOKEN_RECORD } from '../src/j-quants/Types';
 import { DefaultAPITokenStore } from '../src/j-quants/DefaultAPITokenStore';
 
 const YAML_FILE = "tokens-db.yaml";
-let yaml_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
-let yaml_temp_path:string = path.join( yaml_temp_dir , YAML_FILE );
+const yaml_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
+const yaml_temp_path:string = path.join( yaml_temp_dir , YAML_FILE );
 
 // beforeAll(()=>
 // {
@@ -21,7 +21,8 @@ let yaml_temp_path:string = path.join( yaml_temp_dir , YAML_FILE );
 afterAll(()=>
 {
 	console.log("Remove YAML file and dir.");
-	try{
+	try
+	{
 		fs.removeSync( yaml_temp_path );
 		fs.rmdirSync( yaml_temp_dir );
 	}
@@ -43,11 +44,12 @@ describe('Basic CRUD tests',()=>
 				.toBeUndefined();
 			
 			expect( ts.get_id_token_info() )
-				.toBeUndefined()
+				.toBeUndefined();
 		});
 	});
 
-	describe('Set refresh token and get',()=>{
+	describe('Set refresh token and get',()=>
+	{
 
 		const refresh_token = 'refresh-1234567890';
 		const expiration_date = dayjs().add(10,'day');
@@ -57,7 +59,7 @@ describe('Basic CRUD tests',()=>
 			const rec:TOKEN_RECORD = {
 				token: refresh_token,
 				expiration: expiration_date
-			}
+			};
 
 			expect( ts.set_refresh_token_info( rec ) )
 				.toBeTruthy();
@@ -98,7 +100,8 @@ describe('Basic CRUD tests',()=>
 
 	});
 
-	describe('Set ID token and get',()=>{
+	describe('Set ID token and get',()=>
+	{
 
 		const id_token = 'id-1234567890';
 		const expiration_date = dayjs().add(10,'day');
@@ -108,7 +111,7 @@ describe('Basic CRUD tests',()=>
 			const rec:TOKEN_RECORD = {
 				token: id_token,
 				expiration: expiration_date
-			}
+			};
 
 			expect( ts.set_refresh_token_info( rec ) )
 				.toBeTruthy();

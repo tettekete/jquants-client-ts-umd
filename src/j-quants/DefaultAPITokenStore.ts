@@ -27,7 +27,7 @@ export class DefaultAPITokenStore extends APITokenStore
 		super();
 		if( yaml_file )
 		{
-			this._YAML_FILE = yaml_file
+			this._YAML_FILE = yaml_file;
 		};
 	}
 
@@ -101,7 +101,7 @@ export class DefaultAPITokenStore extends APITokenStore
 			expiration: dayjs(yaml_data.refresh_token_expiration)
 		};
 
-		return result
+		return result;
 	}
 
 
@@ -113,7 +113,7 @@ export class DefaultAPITokenStore extends APITokenStore
 		{
 			refresh_token: token,
 			refresh_token_expiration: expiration.toISOString()
-		}
+		};
 
 		yaml_data = {...yaml_data , ...refresh_token_record };
 		const success = this._write_token_store(
@@ -136,7 +136,7 @@ export class DefaultAPITokenStore extends APITokenStore
 			expiration: dayjs(yaml_data.id_token_expiration)
 		};
 
-		return result
+		return result;
 	}
 
 
@@ -148,7 +148,7 @@ export class DefaultAPITokenStore extends APITokenStore
 		{
 			id_token: token,
 			id_token_expiration: expiration.toISOString()
-		}
+		};
 
 		yaml_data = {...yaml_data , ...id_token_record };
 		this._write_token_store( yaml.stringify( yaml_data ) );

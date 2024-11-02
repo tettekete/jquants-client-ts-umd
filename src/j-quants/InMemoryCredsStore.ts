@@ -18,9 +18,9 @@ export class InMemoryCredsStore extends JQCredentialStore
 		} = {}
 	)
 	{
-		super()
+		super();
 		this._user = user;
-		this._password = password
+		this._password = password;
 	}
 	user(): string { return this._user ?? ''}
 	password(): string { return this._password ?? ''}

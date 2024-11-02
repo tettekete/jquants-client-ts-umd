@@ -14,7 +14,7 @@ type API_CONFIG_T =
 {
 	path: string;
 	method: HTTP_METHODS_T;
-}
+};
 
 // 投資部門別情報 - 市場名
 export type INVESTMENT_CATEGORY_T = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
@@ -100,7 +100,7 @@ export default class JQuantsAPIHandler
 	private _auto_token_refresh: boolean;
 
 	private _refresh_token_TTL	= kRefreshTokenTTL;
-	private _id_token_TTL 		= kIdTokenTTL
+	private _id_token_TTL 		= kIdTokenTTL;
 
 	private static readonly baseURL = new ExURL('https://api.jquants.com/v1/');
 	private static readonly URLs: {	[key: string]: API_CONFIG_T } =
@@ -200,14 +200,14 @@ export default class JQuantsAPIHandler
 			path: 'derivatives/options',
 			method: 'GET'
 		},
-	}
+	};
 
 	// - - - - - - - - - - - - - - - - - - - -
 	// common getter / setter
 	// - - - - - - - - - - - - - - - - - - - -
 	set refresh_token_ttl( ttl: number )
 	{
-		this._refresh_token_TTL = ttl
+		this._refresh_token_TTL = ttl;
 	}
 
 	get refresh_token_ttl(): number
@@ -237,7 +237,7 @@ export default class JQuantsAPIHandler
 
 	set refresh_token( token: TOKEN_RECORD | undefined )
 	{
-		this._refresh_token = token
+		this._refresh_token = token;
 	}
 	
 	get refresh_token(): string | undefined
@@ -256,7 +256,7 @@ export default class JQuantsAPIHandler
 
 	set id_token( token: TOKEN_RECORD | undefined )
 	{
-		this._id_token = token
+		this._id_token = token;
 	};
 
 	get id_token(): string | undefined
@@ -285,7 +285,7 @@ export default class JQuantsAPIHandler
 
 	get auto_token_refresh(): boolean
 	{
-		return this._auto_token_refresh
+		return this._auto_token_refresh;
 	}
 	
 
@@ -357,20 +357,20 @@ export default class JQuantsAPIHandler
 		this._token_store	= token_store;
 
 		this.logger = getLogger( log_level );
-		this._auto_token_refresh = auto_token_refresh
+		this._auto_token_refresh = auto_token_refresh;
 	}
 
 	private static _api_url_maker( url_for: string ): ExURL
 	{
-		if( ! JQuantsAPIHandler.URLs.hasOwnProperty( url_for ) )
+		if( ! Object.prototype.hasOwnProperty.call(JQuantsAPIHandler.URLs,  url_for ) )
 		{
 			throw Error(`"${url_for}" is unknown api symbol`);
 		}
 
-		let baseURL: ExURL			= JQuantsAPIHandler.baseURL.clone();
-		let target: API_CONFIG_T	= JQuantsAPIHandler.URLs[url_for];
+		const baseURL: ExURL			= JQuantsAPIHandler.baseURL.clone();
+		const target: API_CONFIG_T	= JQuantsAPIHandler.URLs[url_for];
 
-		let api_url = baseURL.withPath( target.path );
+		const api_url = baseURL.withPath( target.path );
 		api_url.method = target.method as HTTP_METHODS_T;
 
 		return api_url;
@@ -389,7 +389,7 @@ export default class JQuantsAPIHandler
 	// - - - - - - - - - - - - - - - - - - - -
 	async request_with_axios(
 		req: AxiosRequestConfig,
-		extractor: (res:AxiosResponse) => any = (res) => { res.data }
+		extractor: (res:AxiosResponse) => unknown = (res) => { return res.data }
 	): Promise<Result>
 	{
 		let result: Result;
@@ -398,10 +398,10 @@ export default class JQuantsAPIHandler
 			this.lg.trace(`request_with_axios: ${req.method} ${req.url}`);
 			const res: AxiosResponse = await axios( req );
 
-			this.lg.trace(`request path: ${res.hasOwnProperty('request') ? res.request.path : 'unknown'}`);
+			this.lg.trace(`request path: ${Object.prototype.hasOwnProperty.call(res, 'request') ? res.request.path : 'unknown'}`);
 			this.lg.trace(`status: ${res.status} ${res.statusText}`);
 
-			let data = extractor( res );
+			const data = extractor( res );
 			result = Result.success( data );
 
 			this.lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
@@ -435,7 +435,7 @@ export default class JQuantsAPIHandler
 	{
 		if( this._auto_token_refresh )
 		{
-			let r = await this.refreshTokens();
+			const r = await this.refreshTokens();
 			if( r.ng )
 			{
 				return this.returnResult( r );
@@ -450,14 +450,14 @@ export default class JQuantsAPIHandler
 			{
 				Authorization: this.id_token
 			}
-		}
+		};
 
 		if( Object.keys(params).length )
 		{
 			req['params'] = params;
 		}
 
-		let r = await this.request_with_axios( req ,(res) => {return res.data });
+		const r = await this.request_with_axios( req ,(res) => {return res.data });
 
 		return this.returnResult( r );
 	}
@@ -487,8 +487,8 @@ export default class JQuantsAPIHandler
 	
 	async refreshTokens(): Promise<Result>
 	{
-		let _email		= this._creds_store.user();
-		let _password	= this._creds_store.password();
+		const _email		= this._creds_store.user();
+		const _password	= this._creds_store.password();
 
 		if( ! _email || ! _password )
 		{
@@ -542,7 +542,7 @@ export default class JQuantsAPIHandler
 		}
 		else
 		{
-			this.lg.trace('Use the ID Token already received.')
+			this.lg.trace('Use the ID Token already received.');
 		}
 
 		return this.successResult();
@@ -566,9 +566,9 @@ export default class JQuantsAPIHandler
 	 */
 	async getRefreshToken(): Promise<Result>
 	{
-		let exurl	= this.refresh_api_url;
-		let _email	= this._creds_store.user();
-		let _pw		= this._creds_store.password();
+		const exurl		= this.refresh_api_url;
+		const _email	= this._creds_store.user();
+		const _pw		= this._creds_store.password();
 
 		if( ! _email || ! _pw )
 		{
@@ -584,14 +584,14 @@ export default class JQuantsAPIHandler
 				mailaddress: _email,
 				password: _pw
 			}
-		}
+		};
 
 		function extractor( res: AxiosResponse )
 		{
-			return res.data.refreshToken
+			return res.data.refreshToken;
 		}
 
-		let r = await this.request_with_axios( req , extractor )
+		const r = await this.request_with_axios( req , extractor );
 
 		if( r.ok )
 		{
@@ -602,7 +602,7 @@ export default class JQuantsAPIHandler
 			};
 
 			this._token_store.set_refresh_token_info( toke_rec );
-			this.refresh_token = toke_rec
+			this.refresh_token = toke_rec;
 		};
 
 		return this.returnResult( r );
@@ -633,7 +633,7 @@ export default class JQuantsAPIHandler
 	{
 		const exurl = this.id_token_api_url;
 
-		let _refresh_token = refresh_token ?? this.refresh_token;
+		const _refresh_token = refresh_token ?? this.refresh_token;
 		if(! _refresh_token )
 		{
 			return this.failureResult("refresh_token not defined.");
@@ -647,14 +647,14 @@ export default class JQuantsAPIHandler
 			{
 				refreshtoken: _refresh_token
 			}
-		}
+		};
 
 		function extractor( res: AxiosResponse )
 		{
-			return res.data.idToken
+			return res.data.idToken;
 		}
 
-		let r = await this.request_with_axios( req , extractor );
+		const r = await this.request_with_axios( req , extractor );
 
 		if( r.ok )
 		{
@@ -722,17 +722,17 @@ export default class JQuantsAPIHandler
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('pricesDailyQuotes() requires either "code" or "date", but not both.')
+			return this.failureResult('pricesDailyQuotes() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.')
+			return this.failureResult('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -861,17 +861,17 @@ export default class JQuantsAPIHandler
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.')
+			return this.failureResult('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().')
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -918,17 +918,17 @@ export default class JQuantsAPIHandler
 	{
 		if( (! sector33code && ! date ) )
 		{
-			return this.failureResult('marketsShortSelling() requires either "code" or "date", or both.')
+			return this.failureResult('marketsShortSelling() requires either "code" or "date", or both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('In marketsShortSelling(), if either "from" or "to" is specified, both are required.')
+			return this.failureResult('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -975,17 +975,17 @@ export default class JQuantsAPIHandler
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('marketsBreakdown() requires either "code" or "date", but not both.')
+			return this.failureResult('marketsBreakdown() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsBreakdown().')
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsBreakdown().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1027,7 +1027,7 @@ export default class JQuantsAPIHandler
 	{
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsTradingCalendar().')
+			return this.failureResult('If “from” or “to” is used, both must be defined in marketsTradingCalendar().');
 		}
 
 		const params:{
@@ -1077,17 +1077,17 @@ export default class JQuantsAPIHandler
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('indices() requires either "code" or "date", but not both.')
+			return this.failureResult('indices() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('indices() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in indices().')
+			return this.failureResult('If “from” or “to” is used, both must be defined in indices().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1165,7 +1165,7 @@ export default class JQuantsAPIHandler
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsStatements() requires either "code" or "date", but not both.')
+			return this.failureResult('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1206,7 +1206,7 @@ export default class JQuantsAPIHandler
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsStatements() requires either "code" or "date", but not both.')
+			return this.failureResult('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1251,17 +1251,17 @@ export default class JQuantsAPIHandler
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsDividend() requires either "code" or "date", but not both.')
+			return this.failureResult('finsDividend() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.')
+			return this.failureResult('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in finsDividend().')
+			return this.failureResult('If “from” or “to” is used, both must be defined in finsDividend().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1334,7 +1334,7 @@ export default class JQuantsAPIHandler
 		{
 			date:				string;
 			pagination_key?:	string;
-		} = { date: this.toJQDate( date ) }
+		} = { date: this.toJQDate( date ) };
 
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 

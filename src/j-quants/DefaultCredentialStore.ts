@@ -25,10 +25,7 @@ export class DefaultCredsStore extends JQCredentialStore
 
 	loadCreds()
 	{
-		let content: string | undefined;
-		let has_err = false;
-
-		content = fs.readFileSync( this._env_file , 'utf8');	// 敢えて try catch しない
+		const content = fs.readFileSync( this._env_file , 'utf8');	// 敢えて try catch しない
 
 		const subsExpRegex = /^\s*(\w+)=["']?(.+?)["']?$/gm;
 		

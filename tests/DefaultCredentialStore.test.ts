@@ -5,11 +5,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import { pid } from 'node:process';
 
-import { DefaultCredsStore } from '../src/j-quants/DefaultCredentialStore'
+import { DefaultCredsStore } from '../src/j-quants/DefaultCredentialStore';
 
 const env_file = "creds.env";
-let env_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
-let env_temp_path:string = path.join( env_temp_dir , env_file );
+const env_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
+const env_temp_path:string = path.join( env_temp_dir , env_file );
 const env_content = `
 # this is comment line
 
@@ -27,7 +27,8 @@ fs.writeFileSync( env_temp_path , env_content );
 afterAll(()=>
 {
 	console.log("Remove YAML file and dir.");
-	try{
+	try
+	{
 		fs.removeSync( env_temp_path );
 		fs.rmdirSync( env_temp_dir );
 	}
@@ -45,9 +46,9 @@ describe('Basic test',()=>
 			{
 				env_file: env_temp_path
 			}
-		)
+		);
 
 		expect( store.user() ).toBe( 'foo-bar' );
 		expect( store.password() ).toBe( 'hoge-moge' );
-	})
+	});
 });

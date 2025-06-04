@@ -225,9 +225,9 @@ export default class JQuantsAPIHandler
 		return this._id_token_TTL ?? kIdTokenTTL;
 	}
 
-	set token_store( token_srore: APITokenStore )
+	set token_store( token_store: APITokenStore )
 	{
-		this._token_store = token_srore;
+		this._token_store = token_store;
 	}
 
 	get token_store(): APITokenStore | undefined
@@ -422,7 +422,7 @@ export default class JQuantsAPIHandler
 		return this.returnResult( result );
 	}
 	
-	async _request_wiith_auth_header(
+	async _request_with_auth_header(
 		{
 			url,
 			params
@@ -522,7 +522,7 @@ export default class JQuantsAPIHandler
 				else
 				{
 					return this.failureResult(
-							"getRefreshToken faild.",
+							"getRefreshToken failed.",
 							r.data
 						);
 				}
@@ -566,7 +566,7 @@ export default class JQuantsAPIHandler
 	 */
 	async getRefreshToken(): Promise<Result>
 	{
-		const exurl		= this.refresh_api_url;
+		const exUrl		= this.refresh_api_url;
 		const _email	= this._creds_store.user();
 		const _pw		= this._creds_store.password();
 
@@ -577,8 +577,8 @@ export default class JQuantsAPIHandler
 
 		const req: AxiosRequestConfig =
 		{
-			url:	exurl.toString(),
-			method: exurl.method,
+			url:	exUrl.toString(),
+			method: exUrl.method,
 			data:
 			{
 				mailaddress: _email,
@@ -631,7 +631,7 @@ export default class JQuantsAPIHandler
 		refresh_token?:		string | undefined;
 	} = {}): Promise<Result>
 	{
-		const exurl = this.id_token_api_url;
+		const exUrl = this.id_token_api_url;
 
 		const _refresh_token = refresh_token ?? this.refresh_token;
 		if(! _refresh_token )
@@ -641,8 +641,8 @@ export default class JQuantsAPIHandler
 
 		const req: AxiosRequestConfig =
 		{
-			url:	exurl.toString(),
-			method: exurl.method,
+			url:	exUrl.toString(),
+			method: exUrl.method,
 			params:
 			{
 				refreshtoken: _refresh_token
@@ -671,7 +671,7 @@ export default class JQuantsAPIHandler
 		return this.returnResult( r );
 	}
 
-	// API: /lsited/info
+	// API: /listed/info
 	//   _ _     _           _ ___        __       
 	//  | (_)___| |_ ___  __| |_ _|_ __  / _| ___  
 	//  | | / __| __/ _ \/ _` || || '_ \| |_ / _ \ 
@@ -685,7 +685,7 @@ export default class JQuantsAPIHandler
 		if( date ){ params['date'] = this.toJQDate( date ) }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.listed_info_api_url,
 					params: params
@@ -743,7 +743,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.prices_daily_quotes_api_url,
 					params: params
@@ -789,7 +789,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key )	{ params['pagination_key'] = pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.prices_prices_am_api_url,
 					params: params
@@ -825,7 +825,7 @@ export default class JQuantsAPIHandler
 		if( to		){ params['to']			= this.toJQDate( to ) }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.markets_trades_spec_api_url,
 					params: params
@@ -882,7 +882,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.markets_weekly_margin_interest_api_url,
 					params: params
@@ -939,7 +939,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.markets_short_selling_api_url,
 					params: params
@@ -996,7 +996,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.markets_breakdown_api_url,
 					params: params
@@ -1041,7 +1041,7 @@ export default class JQuantsAPIHandler
 		if( to				){ params['to']					= this.toJQDate( to ) }
 		
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.markets_trading_calendar_api_url,
 					params: params
@@ -1098,7 +1098,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.indices_api_url,
 					params: params
@@ -1133,7 +1133,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.indices_topix_api_url,
 					params: params
@@ -1174,7 +1174,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.fins_statements_api_url,
 					params: params
@@ -1215,7 +1215,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.fins_fs_details_api_url,
 					params: params
@@ -1272,7 +1272,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.fins_dividend_api_url,
 					params: params
@@ -1302,7 +1302,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.fins_announcement_api_url,
 					params: params
@@ -1339,7 +1339,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.optionIndexOption_api_url,
 					params: params
@@ -1381,7 +1381,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.derivatives_futures_api_url,
 					params: params
@@ -1427,7 +1427,7 @@ export default class JQuantsAPIHandler
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
 		return this.returnResult(
-			await this._request_wiith_auth_header(
+			await this._request_with_auth_header(
 				{
 					url: this.derivatives_options_api_url,
 					params: params

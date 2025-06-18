@@ -1,8 +1,8 @@
 
 
-import { JQCredentialStore } from './Types';
+import { JQCredentialStore } from '../../types';
 
-export class InMemoryCredsStore extends JQCredentialStore
+export class InMemoryCredentialStore extends JQCredentialStore
 {
 	private _user: string | undefined;
 	private _password: string | undefined;
@@ -22,6 +22,6 @@ export class InMemoryCredsStore extends JQCredentialStore
 		this._user = user;
 		this._password = password;
 	}
-	user(): string { return this._user ?? ''}
-	password(): string { return this._password ?? ''}
+	async user(): Promise<string> { return this._user ?? '' }
+	async password(): Promise<string> { return this._password ?? '' }
 }

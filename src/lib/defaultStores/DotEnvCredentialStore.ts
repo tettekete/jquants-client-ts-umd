@@ -2,9 +2,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 
-import { JQCredentialStore } from './Types';
+import { JQCredentialStore } from '../../types';
 
-export class DefaultCredsStore extends JQCredentialStore
+export class DotEnvCredentialStore extends JQCredentialStore
 {
 	private _env_file: string;
 	private _user:	string | undefined	= undefined;
@@ -51,14 +51,14 @@ export class DefaultCredsStore extends JQCredentialStore
 		}
 	}
 
-	user(): string
+	async user(): Promise<string>
 	{
 		if( ! this._user ){ this.loadCreds() }
 
 		return this._user ?? '';
 	}
 
-	password(): string
+	async password(): Promise<string>
 	{
 		if( ! this._pw ){ this.loadCreds() }
 		return this._pw ?? '';

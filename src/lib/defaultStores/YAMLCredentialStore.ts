@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'yaml';
 
-import { JQCredentialStore } from './Types';
+import { JQCredentialStore } from '../../types';
 
 export class YAMLCredentialStore extends JQCredentialStore
 {
@@ -31,14 +31,14 @@ export class YAMLCredentialStore extends JQCredentialStore
 		this._pw	= password;
 	}
 
-	user(): string
+	async user(): Promise<string>
 	{
 		if( ! this._user ){ this.loadCreds() }
 
 		return this._user ?? '';
 	}
 
-	password(): string
+	async password(): Promise<string>
 	{
 		if( ! this._pw ){ this.loadCreds() }
 		return this._pw ?? '';

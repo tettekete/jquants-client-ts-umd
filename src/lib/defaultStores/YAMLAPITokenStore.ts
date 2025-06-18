@@ -3,10 +3,10 @@ import path from 'path';
 import yaml from 'yaml';
 import dayjs from 'dayjs';
 
-import {APITokenStore ,TOKEN_RECORD } from './Types';
+import {APITokenStore ,TOKEN_RECORD } from '../../types';
 
 
-export class DefaultAPITokenStore extends APITokenStore
+export class YAMLAPITokenStore extends APITokenStore
 {
 	private _YAML_FILE =  path.join( process.cwd(), "tokens-db.yaml" );
 
@@ -89,7 +89,7 @@ export class DefaultAPITokenStore extends APITokenStore
 	}
 
 	
-	get_refresh_token_info()
+	async get_refresh_token_info(): Promise<TOKEN_RECORD | undefined>
 	{
 		const content = this._read_token_store();
 		
@@ -105,7 +105,7 @@ export class DefaultAPITokenStore extends APITokenStore
 	}
 
 
-	set_refresh_token_info({token,expiration}:TOKEN_RECORD):boolean
+	async set_refresh_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>
 	{
 		const content = this._read_token_store();
 		let yaml_data = content === undefined ? {} : yaml.parse( content );
@@ -124,7 +124,7 @@ export class DefaultAPITokenStore extends APITokenStore
 	}
 
 
-	get_id_token_info():TOKEN_RECORD | undefined
+	async get_id_token_info(): Promise<TOKEN_RECORD | undefined>
 	{
 		const content = this._read_token_store();
 		
@@ -140,7 +140,7 @@ export class DefaultAPITokenStore extends APITokenStore
 	}
 
 
-	set_id_token_info({token,expiration}:TOKEN_RECORD):void
+	async set_id_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>
 	{
 		const content = this._read_token_store();
 		let yaml_data = content === undefined ? {} : yaml.parse( content );
@@ -152,6 +152,8 @@ export class DefaultAPITokenStore extends APITokenStore
 
 		yaml_data = {...yaml_data , ...id_token_record };
 		this._write_token_store( yaml.stringify( yaml_data ) );
+
+		return true;
 	}
 }
 

@@ -5,10 +5,10 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs ,{Dayjs} from 'dayjs';
 import pino from 'pino';
 
-import { DefaultAPITokenStore } from './j-quants/DefaultAPITokenStore';
-import { DefaultCredsStore } from './j-quants/DefaultCredentialStore';
-import { APITokenStore ,TOKEN_RECORD ,Logger_T, JQCredentialStore} from './j-quants/Types';
-export { APITokenStore } from './j-quants/Types';
+import { YAMLAPITokenStore } from './lib/defaultStores/YAMLAPITokenStore';
+import { DotEnvCredentialStore  } from './lib/defaultStores/DotEnvCredentialStore';
+import { APITokenStore ,TOKEN_RECORD ,Logger_T, JQCredentialStore} from './types';
+export { APITokenStore } from './types';
 
 type API_CONFIG_T =
 {
@@ -341,8 +341,8 @@ export default class JQuantsAPIHandler
 	//   \___\___/|_| |_|___/\__|_|   \__,_|\___|\__\___/|_|   
 	//                                                         
 	constructor({
-		creds_store = new DefaultCredsStore(),
-		token_store = new DefaultAPITokenStore(),
+		creds_store = new DotEnvCredentialStore(),
+		token_store = new YAMLAPITokenStore(),
 		log_level = 'error',
 		auto_token_refresh = true
 	}:
@@ -496,12 +496,12 @@ export default class JQuantsAPIHandler
 		}
 
 		// トークンストアの状態をメンバーへ読み出す
-		const stored_refresh_token = this._token_store.get_refresh_token_info();
+		const stored_refresh_token = await this._token_store.get_refresh_token_info();
 		if( stored_refresh_token )
 		{
 			this.refresh_token = stored_refresh_token;
 		}
-		const stored_id_token = this._token_store.get_id_token_info();
+		const stored_id_token = await this._token_store.get_id_token_info();
 		if( stored_id_token )
 		{
 			this.id_token = stored_id_token;

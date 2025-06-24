@@ -3,15 +3,15 @@
 	"tasks": [
 		{
 			"type": "shell",
-			"label": "TSC Compile",
-			"command": "npx",
-			"args": ["tsc", "-p", "."],
+			"label": "Build for debug",
+			"command": "npm",
+			"args": ["run", "debug:build"],
 			"options": {
 			  "cwd": "${workspaceFolder}"
 			},
 			"problemMatcher": ["$tsc"],
 			"group": "build",
-			"detail": "TSC: build - tsconfig.json using npx",
+			"detail": "TSC: build for debug using tsconfig.dev.json",
 			"presentation": {
 			  "reveal": "always",
 			  "panel": "new"

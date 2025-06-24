@@ -26,6 +26,9 @@ module.exports = (env, argv) => (
 				test: /\.ts$/,
 				use: {
 					loader: 'ts-loader',
+					options: {
+						configFile: 'tsconfig.prod.json'
+					}
 				},
 				exclude: /node_modules/
 			}

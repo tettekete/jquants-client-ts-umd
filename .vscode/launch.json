@@ -8,13 +8,19 @@
 			"type": "node",
 			"request": "launch",
 			"name": "TSデバッグ",
-			"preLaunchTask": "TSC Compile",
+			"preLaunchTask": "Build for debug",
 			"skipFiles": [
 				"<node_internals>/**"
 			],
 			"cwd": "${workspaceFolder}",
-			"program": "${workspaceFolder}/src/index.ts",
+			// "program": "${workspaceFolder}/src/index.ts",
 			// "program": "${file}",
+			"program": "${workspaceFolder}/dist/${relativeFileDirname}/${fileBasenameNoExtension}.js",
+				// 今開いている .ts に対応する dist/ 下の .js を実行
+			"sourceMaps": true,
+				// tsc が書きだした source map を参照する === .ts 上でブレークポイントが効くようにする
+			"outFiles": ["${workspaceFolder}/dist/**/*.js"],
+				// ソースマップが対応する .js を VSCode に教えるために必要
 			"console": "internalConsole"
 		}
 	]

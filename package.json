@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build": "rm -rf dist && webpack build --mode production",
+    "debug:build": "rm -rf dist && tsc",
     "test": "jest tests",
     "dev": "npm run build; node dist/index.js",
     "prepack": "npm run build",

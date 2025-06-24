@@ -1,3 +1,22 @@
 {
-  "eslint.useFlatConfig": true
+  "eslint.useFlatConfig": true,
+  "cSpell.words": [
+    "DJIAF",
+    "EQOP",
+    "holidaydivision",
+    "JGBLF",
+    "JGBLFE",
+    "mailaddress",
+    "MOTF",
+    "NKVIF",
+    "NKYDF",
+    "refreshtoken",
+    "REITF",
+    "TONA",
+    "TOPIX",
+    "TOPIXE",
+    "TOPIXF",
+    "TOPIXMF",
+    "YAMLAPI"
+  ]
 }

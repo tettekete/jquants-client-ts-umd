@@ -5,8 +5,8 @@ import fs from 'fs-extra';
 import dayjs ,{Dayjs} from 'dayjs';
 import { pid } from 'node:process';
 
-import { TOKEN_RECORD } from '../src/j-quants/Types';
-import { DefaultAPITokenStore } from '../src/j-quants/DefaultAPITokenStore';
+import { TOKEN_RECORD } from '../src/types';
+import { YAMLAPITokenStore } from '../src/lib/defaultStores/YAMLAPITokenStore';
 
 const YAML_FILE = "tokens-db.yaml";
 const yaml_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
@@ -34,16 +34,16 @@ afterAll(()=>
 
 describe('Basic CRUD tests',()=>
 {
-	const ts = new DefaultAPITokenStore({yaml_file: yaml_temp_path });
+	const ts = new YAMLAPITokenStore({yaml_file: yaml_temp_path });
 
 	describe('First reads returns undefined.',()=>
 	{
-		test('First Reads is faild.',()=>
+		test('First Reads is failed.',async ()=>
 		{
-			expect( ts.get_refresh_token_info() )
+			expect( await ts.get_refresh_token_info() )
 				.toBeUndefined();
 			
-			expect( ts.get_id_token_info() )
+			expect( await ts.get_id_token_info() )
 				.toBeUndefined();
 		});
 	});
@@ -65,9 +65,9 @@ describe('Basic CRUD tests',()=>
 				.toBeTruthy();
 		});
 		
-		test('get refresh token.' ,()=>
+		test('get refresh token.' ,async ()=>
 		{
-			const rec = ts.get_refresh_token_info();
+			const rec = await ts.get_refresh_token_info();
 			expect( rec ).toBeDefined();
 			expect( 'token' in (rec as TOKEN_RECORD) ).toBeTruthy();
 			expect( 'expiration' in (rec as TOKEN_RECORD) ).toBeTruthy();
@@ -78,19 +78,19 @@ describe('Basic CRUD tests',()=>
 				.toBeTruthy();
 		});
 
-		test('Update refresh token.',()=>
+		test('Update refresh token.',async ()=>
 		{
 			const new_token = 'refresh-abcdefghijklmn';
 			const new_expiration = dayjs().add(1,'day');
 
 			expect(
-				ts.set_refresh_token_info({
+				await ts.set_refresh_token_info({
 					token: new_token,
 					expiration: new_expiration
 				})
 			).toBeTruthy();
 
-			const rec = ts.get_refresh_token_info();
+			const rec = await ts.get_refresh_token_info();
 
 			expect( rec?.token ).toBe( new_token );
 			expect( rec?.expiration instanceof dayjs ).toBeTruthy();
@@ -106,20 +106,20 @@ describe('Basic CRUD tests',()=>
 		const id_token = 'id-1234567890';
 		const expiration_date = dayjs().add(10,'day');
 
-		test('set ID token.',()=>
+		test('set ID token.',async ()=>
 		{
 			const rec:TOKEN_RECORD = {
 				token: id_token,
 				expiration: expiration_date
 			};
 
-			expect( ts.set_refresh_token_info( rec ) )
+			expect( await ts.set_refresh_token_info( rec ) )
 				.toBeTruthy();
 		});
 		
-		test('get ID token.' ,()=>
+		test('get ID token.' ,async ()=>
 		{
-			const rec = ts.get_refresh_token_info();
+			const rec = await ts.get_refresh_token_info();
 			expect( rec ).toBeDefined();
 			expect( 'token' in (rec as TOKEN_RECORD) ).toBeTruthy();
 			expect( 'expiration' in (rec as TOKEN_RECORD) ).toBeTruthy();
@@ -130,19 +130,19 @@ describe('Basic CRUD tests',()=>
 				.toBeTruthy();
 		});
 
-		test('Update ID token.',()=>
+		test('Update ID token.',async ()=>
 		{
 			const new_token = 'id-abcdefghijklmn';
 			const new_expiration = dayjs().add(1,'day');
 
 			expect(
-				ts.set_refresh_token_info({
+				await ts.set_refresh_token_info({
 					token: new_token,
 					expiration: new_expiration
 				})
 			).toBeTruthy();
 
-			const rec = ts.get_refresh_token_info();
+			const rec = await ts.get_refresh_token_info();
 
 			expect( rec?.token ).toBe( new_token );
 			expect( rec?.expiration instanceof dayjs ).toBeTruthy();

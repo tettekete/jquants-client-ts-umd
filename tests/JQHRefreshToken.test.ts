@@ -5,10 +5,10 @@ import JQH from '../src/j-quants';
 
 import { Dayjs } from 'dayjs';
 
-import { InMemoryCredsStore } from '../src/j-quants/InMemoryCredsStore';
-import { InMemoryTokenStore } from '../src/j-quants/InMemoryTokenStore';
+import { InMemoryCredentialStore } from '../src/lib/defaultStores/InMemoryCredentialStore';
+import { InMemoryTokenStore } from '../src/lib/defaultStores/InMemoryTokenStore';
 
-const credsStore = new InMemoryCredsStore({user: 'foo@example.com' , password: 'password' });
+const credsStore = new InMemoryCredentialStore({user: 'foo@example.com' , password: 'password' });
 const tokenStore = new InMemoryTokenStore();
 
 

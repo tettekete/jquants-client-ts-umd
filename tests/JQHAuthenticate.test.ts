@@ -2,8 +2,8 @@ import {jest,describe, expect, test} from '@jest/globals';
 import axios, { AxiosInstance,AxiosResponse ,InternalAxiosRequestConfig ,AxiosRequestConfig} from 'axios';
 
 import JQH from '../src/j-quants';
-import { InMemoryCredsStore } from '../src/j-quants/InMemoryCredsStore';
-import { InMemoryTokenStore } from '../src/j-quants/InMemoryTokenStore';
+import { InMemoryCredentialStore } from '../src/lib/defaultStores/InMemoryCredentialStore';
+import { InMemoryTokenStore } from '../src/lib/defaultStores/InMemoryTokenStore';
 
 import MockAdapter from 'axios-mock-adapter';
 
@@ -37,7 +37,7 @@ mock
 
 
 // 一旦 jqh インスタンスを作成します
-const credsStore = new InMemoryCredsStore({user: 'foo@example.com' , password: 'password' });
+const credsStore = new InMemoryCredentialStore({user: 'foo@example.com' , password: 'password' });
 const tokenStore = new InMemoryTokenStore();
 
 const jqh = new JQH({

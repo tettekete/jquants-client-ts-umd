@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { pid } from 'node:process';
 
-import { DefaultCredsStore } from '../src/j-quants/DefaultCredentialStore';
+import { DotEnvCredentialStore } from '../src/lib/defaultStores/DotEnvCredentialStore';
 
 const env_file = "creds.env";
 const env_temp_dir:string = path.join( os.tmpdir() , `${pid}-${(Math.random() * 1E+10)}` );
@@ -40,15 +40,15 @@ afterAll(()=>
 
 describe('Basic test',()=>
 {
-	test("Read env file.",()=>
+	test("Read env file.",async ()=>
 	{
-		const store = new DefaultCredsStore(
+		const store = new DotEnvCredentialStore(
 			{
 				env_file: env_temp_path
 			}
 		);
 
-		expect( store.user() ).toBe( 'foo-bar' );
-		expect( store.password() ).toBe( 'hoge-moge' );
+		expect( await store.user() ).toBe( 'foo-bar' );
+		expect( await store.password() ).toBe( 'hoge-moge' );
 	});
 });

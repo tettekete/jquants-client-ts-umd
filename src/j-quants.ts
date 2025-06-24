@@ -487,8 +487,8 @@ export default class JQuantsAPIHandler
 	
 	async refreshTokens(): Promise<Result>
 	{
-		const _email		= this._creds_store.user();
-		const _password	= this._creds_store.password();
+		const _email	= await this._creds_store.user();
+		const _password	= await this._creds_store.password();
 
 		if( ! _email || ! _password )
 		{
@@ -567,8 +567,8 @@ export default class JQuantsAPIHandler
 	async getRefreshToken(): Promise<Result>
 	{
 		const exUrl		= this.refresh_api_url;
-		const _email	= this._creds_store.user();
-		const _pw		= this._creds_store.password();
+		const _email	= await this._creds_store.user();
+		const _pw		= await this._creds_store.password();
 
 		if( ! _email || ! _pw )
 		{
@@ -595,14 +595,14 @@ export default class JQuantsAPIHandler
 
 		if( r.ok )
 		{
-			const toke_rec:TOKEN_RECORD =
+			const token_rec:TOKEN_RECORD =
 			{
 				token: r.data as string,
 				expiration: dayjs().add( this.refresh_token_ttl,'second')
 			};
 
-			this._token_store.set_refresh_token_info( toke_rec );
-			this.refresh_token = toke_rec;
+			await this._token_store.set_refresh_token_info( token_rec );
+			this.refresh_token = token_rec;
 		};
 
 		return this.returnResult( r );
@@ -658,14 +658,14 @@ export default class JQuantsAPIHandler
 
 		if( r.ok )
 		{
-			const toke_rec:TOKEN_RECORD =
+			const token_rec:TOKEN_RECORD =
 			{
 				token: r.data as string,
 				expiration: dayjs().add( this.id_token_ttl ,'second')
 			};
 			
-			this._token_store.set_id_token_info( toke_rec );
-			this.id_token = toke_rec;
+			await this._token_store.set_id_token_info( token_rec );
+			this.id_token = token_rec;
 		}
 
 		return this.returnResult( r );

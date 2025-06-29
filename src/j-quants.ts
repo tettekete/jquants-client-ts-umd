@@ -5,7 +5,7 @@ import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs ,{Dayjs} from 'dayjs';
 import pino from 'pino';
 
-import { YAMLAPITokenStore } from './lib/defaultStores/YAMLAPITokenStore';
+import { InMemoryTokenStore } from './lib/defaultStores/InMemoryTokenStore';
 import { DotEnvCredentialStore  } from './lib/defaultStores/DotEnvCredentialStore';
 import {
 	APITokenStore,
@@ -348,7 +348,7 @@ export default class JQuantsAPIHandler
 	//                                                         
 	constructor({
 		creds_store = new DotEnvCredentialStore(),
-		token_store = new YAMLAPITokenStore(),
+		token_store = new InMemoryTokenStore(),
 		log_level = 'error',
 		auto_token_refresh = true
 	}:

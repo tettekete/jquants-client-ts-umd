@@ -497,12 +497,13 @@ export default class JQuantsAPIHandler
 
 		// トークンストアの状態をメンバーへ読み出す
 		const stored_refresh_token = await this._token_store.get_refresh_token_info();
-		if( stored_refresh_token )
+		if( stored_refresh_token && dayjs().isBefore( stored_refresh_token.expiration ))
 		{
 			this.refresh_token = stored_refresh_token;
 		}
+
 		const stored_id_token = await this._token_store.get_id_token_info();
-		if( stored_id_token )
+		if( stored_id_token && dayjs().isBefore( stored_id_token.expiration ))
 		{
 			this.id_token = stored_id_token;
 		}

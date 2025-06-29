@@ -7,8 +7,14 @@ import pino from 'pino';
 
 import { YAMLAPITokenStore } from './lib/defaultStores/YAMLAPITokenStore';
 import { DotEnvCredentialStore  } from './lib/defaultStores/DotEnvCredentialStore';
-import { APITokenStore ,TOKEN_RECORD ,Logger_T, JQCredentialStore} from './types';
-export { APITokenStore } from './types';
+import {
+	APITokenStore,
+	TOKEN_RECORD,
+	Logger_T,
+	JQCredentialStore,
+	TokenSet
+} from './types';
+export * from './types';
 
 type API_CONFIG_T =
 {
@@ -544,7 +550,15 @@ export default class JQuantsAPIHandler
 			this.lg.trace('Use the ID Token already received.');
 		}
 
-		return this.successResult();
+		const tokenSet: TokenSet =
+		{
+			idToken: this.id_token ?? '',
+			refreshToken: this.refresh_token ?? ''
+		};
+
+		const r = Result.success( tokenSet );	
+
+		return this.returnResult( r );
 	}
 
 	//              _   ____       __               _   _____     _              

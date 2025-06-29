@@ -12,15 +12,17 @@ export class DotEnvCredentialStore extends JQCredentialStore
 
 	constructor(
 		{
-			env_file = path.join(  process.cwd() , '.env' )
+			env_file = '.env',
+			env_dir = process.cwd()
 		}:
 		{
 			env_file?: string;
+			env_dir?: string;
 		} = {}
 	)
 	{
 		super();
-		this._env_file = env_file;
+		this._env_file = path.resolve( path.join( env_dir , env_file ) );
 	}
 
 	loadCreds()

@@ -414,7 +414,7 @@ export default class JQuantsAPIHandler
 			}
 			else
 			{
-				result = Result.failure( "Unknown error" , [e] );
+				result = Result.failure( "Unknown error" , e );
 			}
 			
 		}
@@ -527,8 +527,6 @@ export default class JQuantsAPIHandler
 							r.data
 						);
 				}
-				
-				return this.returnResult( r );
 			}
 			else
 			{

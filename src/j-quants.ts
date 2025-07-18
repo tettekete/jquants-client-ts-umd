@@ -1,5 +1,5 @@
 import ExURL ,{ HTTP_METHODS_T } from './util/exUrl';
-import Result ,{ResultMakerArgsT} from '@tettekete/result';
+import Result from '@tettekete/result';
 import { getLogger } from './util/logger';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs ,{Dayjs} from 'dayjs';
@@ -12,9 +12,49 @@ import {
 	TOKEN_RECORD,
 	Logger_T,
 	JQCredentialStore,
-	TokenSet
+	ListedInfoResponse,
+	PriceDailyQuotesResponse,
+	PricePricesAmResponse,
+	MarketsTradesSpecResponse,
+	MarketsWeeklyMarginInterestResponse,
+	MarketsShortSellingResponse,
+	MarketsShortSellingPositionsResponse,
+	MarketsBreakdownResponse,
+	MarketsTradingCalendarResponse,
+	IndicesResponse,
+	IndicesTopixResponse,
+	FinsStatementsResponse,
+	FinsFsDetailsResponse,
+	FinsDividendResponse,
+	FinsAnnouncementResponse,
+	OptionIndexOptionResponse,
+	DerivativesFuturesResponse,
+	DerivativesOptionsResponse,
 } from './types';
 export * from './types';
+import { isTokenRecord } from './lib/type-guard/client';
+import {
+	isTokenAuthUserResponse,
+	isTokenAuthRefreshResponse,
+	isListedInfoResponse,
+	isPriceDailyQuotesResponse,
+	isPricePricesAmResponse,
+	isMarketsTradesSpecResponse,
+	isMarketsWeeklyMarginInterestResponse,
+	isMarketsShortSellingResponse,
+	isMarketsShortSellingPositionsResponse,
+	isMarketsBreakdownResponse,
+	isMarketsTradingCalendarResponse,
+	isIndicesResponse,
+	isIndicesTopixResponse,
+	isFinsStatementsResponse,
+	isFinsFsDetailsResponse,
+	isFinsDividendResponse,
+	isFinsAnnouncementResponse,
+	isOptionIndexOptionResponse,
+	isDerivativesFuturesResponse,
+	isDerivativesOptionsResponse,
+} from './type-guard';
 
 type API_CONFIG_T =
 {
@@ -93,20 +133,31 @@ export type DERIVATIVES_OPTIONS_CAT_T	= 'TOPIXE'
 const kRefreshTokenTTL	= 7 * 24 * 3600;
 const kIdTokenTTL		= 24 * 3600;
 
+function isValidToken(tokenRecord: TOKEN_RECORD | undefined): boolean
+{
+	if( ! tokenRecord )
+	{
+		return false;
+	}
+
+	const expiration: Dayjs = dayjs( tokenRecord.expiration );
+	return dayjs().isBefore( expiration );
+}
+
+
 export default class JQuantsAPIHandler
 {
 	logger: Logger_T;
-	private _refresh_token	: TOKEN_RECORD | undefined;
-	private _id_token		: TOKEN_RECORD | undefined;
+	private _refreshTokenRecord	: TOKEN_RECORD | undefined;
+	private _idTokenRecord		: TOKEN_RECORD | undefined;
 
-	private _creds_store	: JQCredentialStore;
-	private _token_store	: APITokenStore;
-	private _last_result	: Result | undefined;
+	private _credsStore		: JQCredentialStore;
+	private _tokenStore	: APITokenStore;
 
-	private _auto_token_refresh: boolean;
+	private _autoTokenRefresh: boolean;
 
-	private _refresh_token_TTL	= kRefreshTokenTTL;
-	private _id_token_TTL 		= kIdTokenTTL;
+	private _refreshTokenTTL	= kRefreshTokenTTL;
+	private _idTokenTTL 		= kIdTokenTTL;
 
 	private static readonly baseURL = new ExURL('https://api.jquants.com/v1/');
 	private static readonly URLs: {	[key: string]: API_CONFIG_T } =
@@ -211,87 +262,84 @@ export default class JQuantsAPIHandler
 	// - - - - - - - - - - - - - - - - - - - -
 	// common getter / setter
 	// - - - - - - - - - - - - - - - - - - - -
-	set refresh_token_ttl( ttl: number )
+	set refreshTokenTTL( ttl: number )
 	{
-		this._refresh_token_TTL = ttl;
+		this._refreshTokenTTL = ttl;
 	}
 
-	get refresh_token_ttl(): number
+	get refreshTokenTTL(): number
 	{
-		return this._refresh_token_TTL ?? kRefreshTokenTTL;
+		return this._refreshTokenTTL ?? kRefreshTokenTTL;
 	}
 
-	set id_token_ttl( ttl: number )
+	set idTokenTTL( ttl: number )
 	{
-		this._id_token_TTL = ttl;
+		this._idTokenTTL = ttl;
 	}
 
-	get id_token_ttl(): number
+	get idTokenTTL(): number
 	{
-		return this._id_token_TTL ?? kIdTokenTTL;
+		return this._idTokenTTL ?? kIdTokenTTL;
 	}
 
-	set token_store( token_store: APITokenStore )
+	set tokenStore( tokenStore: APITokenStore )
 	{
-		this._token_store = token_store;
+		this._tokenStore = tokenStore;
 	}
 
-	get token_store(): APITokenStore | undefined
+	get tokenStore(): APITokenStore | undefined
 	{
-		return this._token_store;
-	}
-
-	set refresh_token( token: TOKEN_RECORD | undefined )
-	{
-		this._refresh_token = token;
+		return this._tokenStore;
 	}
 	
-	get refresh_token(): string | undefined
+	/**
+	 * this._refreshTokenRecord.token にアクセスするためのエイリアスアクセサ
+	 * 期限切れの場合 undefined を返す
+	 *
+	 * @readonly
+	 * @type {(string | undefined)}
+	 */
+	get refreshToken(): string | undefined
 	{
 		// レコードが登録されていて期限切れで無ければトークンを返す
-		if( this._refresh_token )
+		if( isValidToken( this._refreshTokenRecord ) 
+			&& isTokenRecord( this._refreshTokenRecord )
+		)
 		{
-			const expiration = dayjs( this._refresh_token.expiration );
-			if( dayjs().isBefore( expiration ) )
-			{
-				return this._refresh_token.token;
-			}
+			return this._refreshTokenRecord.token;
 		}
+
 		return undefined;
 	};
 
-	set id_token( token: TOKEN_RECORD | undefined )
-	{
-		this._id_token = token;
-	};
-
-	get id_token(): string | undefined
+	/**
+	 * this._idTokenRecord.token にアクセスするためのエイリアスアクセサ
+	 * 期限切れの場合 undefined を返す
+	 *
+	 * @readonly
+	 * @type {(string | undefined)}
+	 */
+	get idToken(): string | undefined
 	{
 		// レコードが登録されていて期限切れで無ければトークンを返す
-		if( this._id_token )
+		if( isValidToken( this._idTokenRecord )
+			&& isTokenRecord( this._idTokenRecord )
+		)
 		{
-			const expiration = dayjs( this._id_token.expiration );
-			if( dayjs().isBefore( expiration ) )
-			{
-				return this._id_token.token;
-			}
+			return this._idTokenRecord.token;
 		}
+
 		return undefined;
 	};
 
-	get last_result(): Result | undefined
+	set autoTokenRefresh( isEnabled: boolean)
 	{
-		return this._last_result;
+		this._autoTokenRefresh = isEnabled;
 	}
 
-	set auto_token_refresh( is_enabled: boolean)
+	get autoTokenRefresh(): boolean
 	{
-		this._auto_token_refresh = is_enabled;
-	}
-
-	get auto_token_refresh(): boolean
-	{
-		return this._auto_token_refresh;
+		return this._autoTokenRefresh;
 	}
 	
 
@@ -305,38 +353,38 @@ export default class JQuantsAPIHandler
 	// API URLs getter
 	// - - - - - - - - - - - - - - - - - - - -
 
-	get refresh_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'refresh_api' ) }
-	get id_token_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'id_token_api' ) }
-	get listed_info_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'listed_info' ) }
-	get prices_daily_quotes_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' ) }
-	get prices_prices_am_api_url()
-								{ return  JQuantsAPIHandler._api_url_maker( 'prices_prices_am' ) }
-	get markets_trades_spec_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' ) }
-	get markets_weekly_margin_interest_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' ) }
-	get markets_short_selling_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'markets_short_selling' ) }
-	get markets_breakdown_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'markets_breakdown' ) }
-	get markets_trading_calendar_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' ) }
-	get indices_api_url()		{ return JQuantsAPIHandler._api_url_maker( 'indices' ) }
-	get indices_topix_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'indices_topix' ) }
-	get fins_statements_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'fins_statements' ) }
-	get fins_fs_details_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ) }
-	get fins_dividend_api_url()	{ return JQuantsAPIHandler._api_url_maker( 'fins_dividend' ) }
-	get fins_announcement_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'fins_announcement' ) }
-	get optionIndexOption_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'option_index_option' ) }
-	get derivatives_futures_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ) }
-	get derivatives_options_api_url()
-								{ return JQuantsAPIHandler._api_url_maker( 'derivatives_options' ) }
+	get refreshApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'refresh_api' ) }
+	get idTokenApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'id_token_api' ) }
+	get listedInfoApiUrl()	{ return JQuantsAPIHandler._api_url_maker( 'listed_info' ) }
+	get pricesDailyQuotesApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' ) }
+	get pricesPricesAmApiUrl()
+							{ return  JQuantsAPIHandler._api_url_maker( 'prices_prices_am' ) }
+	get marketsTradesSpecApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' ) }
+	get marketsWeeklyMarginInterestApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' ) }
+	get marketsShortSellingApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'markets_short_selling' ) }
+	get marketsBreakdownApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'markets_breakdown' ) }
+	get marketsTradingCalendarApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' ) }
+	get indicesApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'indices' ) }
+	get indicesTopixApiUrl(){ return JQuantsAPIHandler._api_url_maker( 'indices_topix' ) }
+	get finsStatementsApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'fins_statements' ) }
+	get finsFsDetailsApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ) }
+	get finsDividendApiUrl(){ return JQuantsAPIHandler._api_url_maker( 'fins_dividend' ) }
+	get finsAnnouncementApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'fins_announcement' ) }
+	get optionIndexOptionApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'option_index_option' ) }
+	get derivativesFuturesApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ) }
+	get derivativesOptionsApiUrl()
+							{ return JQuantsAPIHandler._api_url_maker( 'derivatives_options' ) }
 
 
 	
@@ -347,23 +395,23 @@ export default class JQuantsAPIHandler
 	//   \___\___/|_| |_|___/\__|_|   \__,_|\___|\__\___/|_|   
 	//                                                         
 	constructor({
-		creds_store = new DotEnvCredentialStore(),
-		token_store = new InMemoryTokenStore(),
-		log_level = 'error',
-		auto_token_refresh = true
+		credsStore = new DotEnvCredentialStore(),
+		tokenStore = new InMemoryTokenStore(),
+		logLevel = 'error',
+		autoTokenRefresh = true
 	}:
 	{
-		creds_store		?: JQCredentialStore;
-		token_store		?: APITokenStore;
-		log_level		?: pino.Level;
-		auto_token_refresh?: boolean
+		credsStore		?: JQCredentialStore;
+		tokenStore		?: APITokenStore;
+		logLevel		?: pino.Level;
+		autoTokenRefresh?: boolean
 	} = {})
 	{
-		this._creds_store	= creds_store;
-		this._token_store	= token_store;
+		this._credsStore	= credsStore;
+		this._tokenStore	= tokenStore;
 
-		this.logger = getLogger( log_level );
-		this._auto_token_refresh = auto_token_refresh;
+		this.logger = getLogger( logLevel );
+		this._autoTokenRefresh = autoTokenRefresh;
 	}
 
 	private static _api_url_maker( url_for: string ): ExURL
@@ -394,11 +442,12 @@ export default class JQuantsAPIHandler
 	//               |_|                  |_____|                |_____|                     
 	// - - - - - - - - - - - - - - - - - - - -
 	async request_with_axios(
-		req: AxiosRequestConfig,
-		extractor: (res:AxiosResponse) => unknown = (res) => { return res.data }
-	): Promise<Result>
+		req: AxiosRequestConfig
+	): Promise<
+		Result<AxiosResponse , AxiosError | unknown>
+	>
 	{
-		let result: Result;
+		let result: Result<AxiosResponse , AxiosError | unknown>;
 		try
 		{
 			this.lg.trace(`request_with_axios: ${req.method} ${req.url}`);
@@ -407,8 +456,7 @@ export default class JQuantsAPIHandler
 			this.lg.trace(`request path: ${Object.prototype.hasOwnProperty.call(res, 'request') ? res.request.path : 'unknown'}`);
 			this.lg.trace(`status: ${res.status} ${res.statusText}`);
 
-			const data = extractor( res );
-			result = Result.success( data );
+			result = Result.success<AxiosResponse>( res );
 
 			this.lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
 		}
@@ -416,7 +464,7 @@ export default class JQuantsAPIHandler
 		{
 			if( e instanceof AxiosError )
 			{
-				result = Result.failure( e.response );
+				result = Result.failure<AxiosError>( "AxiosError was thrown." ,e );
 			}
 			else
 			{
@@ -425,7 +473,7 @@ export default class JQuantsAPIHandler
 			
 		}
 
-		return this.returnResult( result );
+		return result;
 	}
 	
 	async _request_with_auth_header(
@@ -437,14 +485,14 @@ export default class JQuantsAPIHandler
 			url: ExURL;
 			params: { [key in string]: string | number }
 		}
-	): Promise<Result>
+	): Promise<Result<AxiosResponse , AxiosError | unknown>>
 	{
-		if( this._auto_token_refresh )
+		if( this._autoTokenRefresh )
 		{
-			const r = await this.refreshTokens();
-			if( r.ng )
+			const idToken = await this.getIdToken();
+			if( ! idToken )
 			{
-				return this.returnResult( r );
+				return Result.failure( "Failed to obtain ID token." );
 			}
 		}
 
@@ -454,7 +502,7 @@ export default class JQuantsAPIHandler
 			method: url.method,
 			headers:
 			{
-				Authorization: this.id_token
+				Authorization: this.idToken
 			}
 		};
 
@@ -463,129 +511,37 @@ export default class JQuantsAPIHandler
 			req['params'] = params;
 		}
 
-		const r = await this.request_with_axios( req ,(res) => {return res.data });
+		const r = await this.request_with_axios( req );
 
-		return this.returnResult( r );
+		return r;
 	}
 
-	//             __               _   _____     _                  
-	//   _ __ ___ / _|_ __ ___  ___| |_|_   _|__ | | _____ _ __  ___ 
-	//  | '__/ _ \ |_| '__/ _ \/ __| '_ \| |/ _ \| |/ / _ \ '_ \/ __|
-	//  | | |  __/  _| | |  __/\__ \ | | | | (_) |   <  __/ | | \__ \
-	//  |_|  \___|_| |_|  \___||___/_| |_|_|\___/|_|\_\___|_| |_|___/
-	//                                                               
-	// - - - - - - - - - - - - - - - - - - - -
-	/*
-		1. token_store から ID トークンを取得する
-			-> 期限が切れていない
-			-> 完了
-		2. token_store から リフレッシュトークンを取得する
-			-> 期限が切れていない
-				-> getIDToken で API から ID トークンを取得する
-				-> token_store に登録
-				-> 完了
-		3. getRefreshToken でリフレッシュトークンを取得する
-			-> token_store に保存する
-			-> getIDToken で API から ID トークンを取得する
-			-> token_store に保存する
-			-> 完了
-	*/
-	
-	async refreshTokens(): Promise<Result>
-	{
-		const _email	= await this._creds_store.user();
-		const _password	= await this._creds_store.password();
 
-		if( ! _email || ! _password )
-		{
-			return this.failureResult("Either email or password is not defined.");
-		}
-
-		// トークンストアの状態をメンバーへ読み出す
-		const stored_refresh_token = await this._token_store.get_refresh_token_info();
-		if( stored_refresh_token && dayjs().isBefore( stored_refresh_token.expiration ))
-		{
-			this.refresh_token = stored_refresh_token;
-		}
-
-		const stored_id_token = await this._token_store.get_id_token_info();
-		if( stored_id_token && dayjs().isBefore( stored_id_token.expiration ))
-		{
-			this.id_token = stored_id_token;
-		}
-
-		if( ! this.id_token )
-		{
-			if( ! this.refresh_token )
-			{
-				this.lg.trace('Update the Refresh Token and ID Token.');
-
-				let r = await this.getRefreshToken();
-
-				if( r.ok )
-				{
-					r = await this.getIDToken();
-				}
-				else
-				{
-					return this.failureResult(
-							"getRefreshToken failed.",
-							r.data
-						);
-				}
-			}
-			else
-			{
-				this.lg.trace('Update the ID Token using a valid Refresh Token.');
-
-				const r = await this.getIDToken();
-				if( r.ng )
-				{
-					return this.returnResult( r );
-				}
-			}
-		}
-		else
-		{
-			this.lg.trace('Use the ID Token already received.');
-		}
-
-		const tokenSet: TokenSet =
-		{
-			idToken: this.id_token ?? '',
-			refreshToken: this.refresh_token ?? ''
-		};
-
-		const r = Result.success( tokenSet );	
-
-		return this.returnResult( r );
-	}
-
-	//              _   ____       __               _   _____     _              
-	//    __ _  ___| |_|  _ \ ___ / _|_ __ ___  ___| |_|_   _|__ | | _____ _ __  
-	//   / _` |/ _ \ __| |_) / _ \ |_| '__/ _ \/ __| '_ \| |/ _ \| |/ / _ \ '_ \ 
-	//  | (_| |  __/ |_|  _ <  __/  _| | |  __/\__ \ | | | | (_) |   <  __/ | | |
-	//   \__, |\___|\__|_| \_\___|_| |_|  \___||___/_| |_|_|\___/|_|\_\___|_| |_|
-	//   |___/                                                                   
+	//              _   ____       __               _   _____     _              ____                 _ _   
+	//    __ _  ___| |_|  _ \ ___ / _|_ __ ___  ___| |_|_   _|__ | | _____ _ __ |  _ \ ___  ___ _   _| | |_ 
+	//   / _` |/ _ \ __| |_) / _ \ |_| '__/ _ \/ __| '_ \| |/ _ \| |/ / _ \ '_ \| |_) / _ \/ __| | | | | __|
+	//  | (_| |  __/ |_|  _ <  __/  _| | |  __/\__ \ | | | | (_) |   <  __/ | | |  _ <  __/\__ \ |_| | | |_ 
+	//   \__, |\___|\__|_| \_\___|_| |_|  \___||___/_| |_|_|\___/|_|\_\___|_| |_|_| \_\___||___/\__,_|_|\__|
+	//   |___/                                                                                                                                                               
 	// - - - - - - - - - - - - - - - - - - - -
 	/**
 	 * Refresh Token 取得 API をコールしリフレッシュトークンを取得する。
 	 * 
-	 * 取得したトークンは this._token_store を通して保存される、また
-	 * 同レコードは this.refresh_token に格納される。
+	 * 取得したトークンは this._tokenStore を通してトークンストアに保存される、また
+	 * 同レコードは this._refreshTokenRecord にもキャッシュとして格納される。
 	 * 
 	 * @param param0 
 	 * @returns 
 	 */
-	async getRefreshToken(): Promise<Result>
+	async getRefreshTokenResult(): Promise<Result<TOKEN_RECORD ,AxiosError | unknown>>
 	{
-		const exUrl		= this.refresh_api_url;
-		const _email	= await this._creds_store.user();
-		const _pw		= await this._creds_store.password();
+		const exUrl		= this.refreshApiUrl;
+		const _email	= await this._credsStore.user();
+		const _pw		= await this._credsStore.password();
 
 		if( ! _email || ! _pw )
 		{
-			return this.failureResult("Either email or password is not defined.");
+			return Result.failure("Either email or password is not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -599,57 +555,115 @@ export default class JQuantsAPIHandler
 			}
 		};
 
-		function extractor( res: AxiosResponse )
-		{
-			return res.data.refreshToken;
-		}
 
-		const r = await this.request_with_axios( req , extractor );
+		const r = await this.request_with_axios( req );
 
-		if( r.ok )
+		if( Result.isSuccess( r )
+			&& isTokenAuthUserResponse( r.data.data )
+			)
 		{
-			const token_rec:TOKEN_RECORD =
+			const tokenRec:TOKEN_RECORD =
 			{
-				token: r.data as string,
-				expiration: dayjs().add( this.refresh_token_ttl,'second')
+				token: r.data.data.refreshToken,
+				expiration: dayjs().add( this.refreshTokenTTL,'second')
 			};
 
-			await this._token_store.set_refresh_token_info( token_rec );
-			this.refresh_token = token_rec;
-		};
+			await this._tokenStore.set_refresh_token_info( tokenRec );
+			this._refreshTokenRecord = tokenRec;
 
-		return this.returnResult( r );
+			return Result.success<TOKEN_RECORD>( tokenRec );
+		}
+		else if( Result.isFailure( r ) )
+		{
+			return r;
+		}
+		
+		return Result.failure("Unknown error." , r.data );
 	}
 
 
-	//              _   ___ ____ _____     _              
-	//    __ _  ___| |_|_ _|  _ \_   _|__ | | _____ _ __  
-	//   / _` |/ _ \ __|| || | | || |/ _ \| |/ / _ \ '_ \ 
-	//  | (_| |  __/ |_ | || |_| || | (_) |   <  __/ | | |
-	//   \__, |\___|\__|___|____/ |_|\___/|_|\_\___|_| |_|
-	//   |___/                                            
+	//              _   ____       __               _   _____     _              
+	//    __ _  ___| |_|  _ \ ___ / _|_ __ ___  ___| |_|_   _|__ | | _____ _ __  
+	//   / _` |/ _ \ __| |_) / _ \ |_| '__/ _ \/ __| '_ \| |/ _ \| |/ / _ \ '_ \ 
+	//  | (_| |  __/ |_|  _ <  __/  _| | |  __/\__ \ | | | | (_) |   <  __/ | | |
+	//   \__, |\___|\__|_| \_\___|_| |_|  \___||___/_| |_|_|\___/|_|\_\___|_| |_|
+	//   |___/                                                                   
 	// - - - - - - - - - - - - - - - - - - - -
 	/**
-	 * 
+	 * テキストのリフレッシュトークンを取得して返します。
+	 *
+	 * getRefreshTokenResult() とは異なり、メンバー変数やトークンストアに有効なリフレッシュトークンが
+	 * 保存されている場合はそれを返します。
+	 * それらが無効である場合 getRefreshTokenResult() をコールし Web API からリフレッシュトークンを
+	 * 取得します。
+	 *
+	 * @async
+	 * @returns {Promise<string | undefined>} 
+	 */
+	async getRefreshToken(): Promise<string | undefined>
+	{
+		const breakCondition = () => 
+		{
+			return isValidToken( this._refreshTokenRecord );
+		};
+
+		const queue:(()=>Promise<boolean>)[] = [
+			async () =>
+			{
+				this._refreshTokenRecord	= await this._tokenStore.get_refresh_token_info();
+				return true;// 読み出せなかった場合、次のタスクで WebAPI からリフレッシュトークンを取得するので、ここでは true を返す
+			},
+			async () =>
+			{
+				const r = await this.getRefreshTokenResult();	// 成功すれば this.refreshTokenRecord も更新する
+				return r.ok;
+			}
+		];
+
+		for( const task of queue )
+		{
+			if( breakCondition() ){ break };
+			const r = await task();
+			if( ! r ){ break };
+		}
+
+		return this.refreshToken;
+	}
+
+
+	//              _   ___ ____ _____     _              ____                 _ _   
+	//    __ _  ___| |_|_ _|  _ \_   _|__ | | _____ _ __ |  _ \ ___  ___ _   _| | |_ 
+	//   / _` |/ _ \ __|| || | | || |/ _ \| |/ / _ \ '_ \| |_) / _ \/ __| | | | | __|
+	//  | (_| |  __/ |_ | || |_| || | (_) |   <  __/ | | |  _ <  __/\__ \ |_| | | |_ 
+	//   \__, |\___|\__|___|____/ |_|\___/|_|\_\___|_| |_|_| \_\___||___/\__,_|_|\__|
+	//   |___/                                                                                                               
+	// - - - - - - - - - - - - - - - - - - - -
+	/**
+	 * WebAPI をコールして ID トークンを取得する。
+	 *
+	 * 取得したトークンは this._tokenStore を通してトークンストアに保存される、また
+	 * 同レコードは this._idTokenRecord にもキャッシュして格納される。
+	 *
+	 * @async
 	 * @param {Object} args
 	 * @param {string} args.refresh_token - リフレッシュトークン
-	 * @returns {Result} r - r.data is ID token when r.ok
+	 * @returns {Promise<Result>} r - r.data is ID token when r.ok
 	 * 	
 	 */
-	async getIDToken(
+	async getIDTokenResult(
 	{
 		refresh_token,
 	}
 	:{
 		refresh_token?:		string | undefined;
-	} = {}): Promise<Result>
+	} = {}): Promise<Result<TOKEN_RECORD , AxiosError | unknown>>
 	{
-		const exUrl = this.id_token_api_url;
+		const exUrl = this.idTokenApiUrl;
 
-		const _refresh_token = refresh_token ?? this.refresh_token;
+		const _refresh_token = refresh_token ?? this.refreshToken;
 		if(! _refresh_token )
 		{
-			return this.failureResult("refresh_token not defined.");
+			return Result.failure("refresh_token not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -662,26 +676,124 @@ export default class JQuantsAPIHandler
 			}
 		};
 
-		function extractor( res: AxiosResponse )
-		{
-			return res.data.idToken;
-		}
+		const r = await this.request_with_axios( req );
 
-		const r = await this.request_with_axios( req , extractor );
-
-		if( r.ok )
+		if(
+			Result.isSuccess( r )
+			&& isTokenAuthRefreshResponse( r.data.data )
+		)
 		{
-			const token_rec:TOKEN_RECORD =
+			const axiosResponse = r.data;
+			const tokenRec:TOKEN_RECORD =
 			{
-				token: r.data as string,
-				expiration: dayjs().add( this.id_token_ttl ,'second')
+				token: axiosResponse.data.idToken,
+				expiration: dayjs().add( this.idTokenTTL ,'second')
 			};
 			
-			await this._token_store.set_id_token_info( token_rec );
-			this.id_token = token_rec;
+			await this._tokenStore.set_id_token_info( tokenRec );
+			this._idTokenRecord = tokenRec;
+			return Result.success<TOKEN_RECORD>( tokenRec );
+		}
+		else if( Result.isFailure( r ) )
+		{
+			return r;
 		}
 
-		return this.returnResult( r );
+		return Result.failure("Invalid error." , r.data );
+	}
+
+
+	//              _   ___    _ _____     _              
+	//    __ _  ___| |_|_ _|__| |_   _|__ | | _____ _ __  
+	//   / _` |/ _ \ __|| |/ _` | | |/ _ \| |/ / _ \ '_ \ 
+	//  | (_| |  __/ |_ | | (_| | | | (_) |   <  __/ | | |
+	//   \__, |\___|\__|___\__,_| |_|\___/|_|\_\___|_| |_|
+	//   |___/                                            
+	// - - - - - - - - - - - - - - - - - - - -
+	/**
+	 * テキストの ID トークンを取得して返します。
+
+	 * getIDTokenResult() とは異なり、メンバー変数やトークンストアに有効な ID トークンが
+	 * 保存されている場合はそれを返します。
+	 * それらが無効である場合 getIDTokenResult() をコールし Web API から ID トークンを
+	 * 取得します。
+	 *
+	 * @async
+	 * @returns {Promise<string | undefined>} 
+	 */
+	async getIdToken(): Promise<string | undefined>
+	{
+		const breakCondition = () => 
+		{
+			return isValidToken( this._idTokenRecord );
+		};
+
+		// 現時点で this._idTokenRecord が有効で無い場合に順次行う処理をキュー化
+		const queue:(()=>Promise<boolean>)[] = [
+			async () =>
+			{
+				// トークンストアから ID トークンを読み出す
+				this._idTokenRecord = await this._tokenStore.get_id_token_info();
+				return true;	// 読み出せたかどうかにかかわらず breakCondition() で評価されるので必ず true を返す
+			},
+			async () =>
+			{
+				// メンバー変数若しくはトークンストアからリフレッシュトークンを取得し、
+				// それらが有効なリフレッシュトークンでは無い場合 Web API から
+				// リフレッシュトークンを取得する
+				const refreshToken = await this.getRefreshToken();
+				return !! refreshToken;	// リフレッシュトークンを取得できなかった場合 queue を抜ける
+			},
+			async () =>
+			{
+				// Web API から ID トークンを取得する
+				const r = await this.getIDTokenResult();	// 成功すれば this._idTokenRecord も更新する
+				return r.ok;	// 何らかの理由で ID トークンを取得できなかった場合( r.ok === false )ならば queue を抜ける
+			}
+		];
+
+		for( const task of queue )
+		{
+			if( breakCondition() ){ break };
+			const r = await task();
+			if( ! r ){ break };
+		}
+
+		return this.idToken;
+	}
+
+
+	private static _makeAPIResult<EXPECTED_TYPE>(
+		r:Result<AxiosResponse,AxiosError | unknown> 
+		,typeGuardFn: (value: unknown) => value is EXPECTED_TYPE
+		,typeName: string
+		,methodOrAPIName: string
+	)
+	:Result<EXPECTED_TYPE,AxiosError | unknown>
+	{
+		if( Result.isSuccess( r ) && r.data  )
+		{	
+			if( typeGuardFn( r.data.data ) )
+			{
+				return Result.success<EXPECTED_TYPE>( r.message , r.data.data );
+			}
+			else if( ! r.data )
+			{
+				return Result.failure('Invalid error: .data property is falsy.');
+			}
+			else
+			{
+				return Result.failure(`Type guard error: .data type is not ${typeName}.`);
+			}
+		}
+		else if( Result.isFailure( r ) )
+		{
+			return r;
+		}
+		else
+		{
+			return Result.failure(`Invalid error occurred at ${methodOrAPIName}.`);
+		}
 	}
 
 	// API: /listed/info
@@ -692,18 +804,24 @@ export default class JQuantsAPIHandler
 	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
 	//                                             
 	async listedInfo({code , date}:{code?: string, date?: string | Date | Dayjs } = {})
+		:Promise<Result<ListedInfoResponse,AxiosError | unknown>>
 	{
 		const params:{code?: string, date?: string } = {};
 		if( code ){ params['code'] = code }
 		if( date ){ params['date'] = this.toJQDate( date ) }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.listed_info_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.listedInfoApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<ListedInfoResponse>(
+			r,
+			isListedInfoResponse,
+			'ListedInfoResponse',
+			'listedInfo()'
 		);
 	}
 
@@ -730,22 +848,22 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?:	string
 		}
-	): Promise<Result>
+	): Promise<Result<PriceDailyQuotesResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('pricesDailyQuotes() requires either "code" or "date", but not both.');
+			return Result.failure('pricesDailyQuotes() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
+			return Result.failure('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -755,13 +873,18 @@ export default class JQuantsAPIHandler
 		if( date				){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.prices_daily_quotes_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.pricesDailyQuotesApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<PriceDailyQuotesResponse>(
+			r,
+			isPriceDailyQuotesResponse,
+			'PriceDailyQuoteItem',
+			'pricesDailyQuotes()'
 		);
 	}
 
@@ -795,19 +918,24 @@ export default class JQuantsAPIHandler
 	:{
 		code?: string;
 		pagination_key?: string
-	}): Promise<Result>
+	}): Promise<Result<PricePricesAmResponse ,AxiosError | unknown>>
 	{
 		const params:{code?: string, pagination_key?: string } = {};
 		if( code )				{ params['code'] = code }
 		if( pagination_key )	{ params['pagination_key'] = pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.prices_prices_am_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.pricesPricesAmApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<PricePricesAmResponse>(
+			r,
+			isPricePricesAmResponse,
+			'PricePricesAmResponse',
+			'pricesPricesAm()'
 		);
 	}
 
@@ -829,7 +957,7 @@ export default class JQuantsAPIHandler
 			from?: string | Date | Dayjs;
 			to?: string | Date | Dayjs;
 		} = {}
-	): Promise<Result>
+	): Promise<Result<MarketsTradesSpecResponse , AxiosError | unknown >>
 	{
 		const params:{ [key in string]: string} = {};
 
@@ -837,13 +965,18 @@ export default class JQuantsAPIHandler
 		if( from	){ params['from']		= this.toJQDate( from ) }
 		if( to		){ params['to']			= this.toJQDate( to ) }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.markets_trades_spec_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsTradesSpecApiUrl,
+				params: params
+			}
+		);
+		
+		return JQuantsAPIHandler._makeAPIResult<MarketsTradesSpecResponse>(
+			r,
+			isMarketsTradesSpecResponse,
+			'MarketsTradesSpecResponse',
+			'marketsTradesSpec()'
 		);
 	}
 
@@ -869,22 +1002,27 @@ export default class JQuantsAPIHandler
 			to?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<MarketsWeeklyMarginInterestResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
+			return Result.failure('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
+		}
+
+		if( code && (! from || ! to) )
+		{
+			return Result.failure('When specifying "code" in marketsWeeklyMarginInterest(), "from" and "to" are required.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsWeeklyMarginInterest().');
+			return Result.failure('If "from" or "to" is used, both must be defined in marketsWeeklyMarginInterest().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -894,13 +1032,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.markets_weekly_margin_interest_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsWeeklyMarginInterestApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<MarketsWeeklyMarginInterestResponse>(
+			r,
+			isMarketsWeeklyMarginInterestResponse,
+			'MarketsWeeklyMarginInterestResponse',
+			'marketsWeeklyMarginInterest()'
 		);
 	}
 
@@ -927,21 +1070,21 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<MarketsShortSellingResponse,AxiosError | unknown>>
 	{
 		if( (! sector33code && ! date ) )
 		{
-			return this.failureResult('marketsShortSelling() requires either "code" or "date", or both.');
+			return Result.failure('marketsShortSelling() requires either "code" or "date", or both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
+			return Result.failure('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -951,24 +1094,110 @@ export default class JQuantsAPIHandler
 		if( date				){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.markets_short_selling_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsShortSellingApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<MarketsShortSellingResponse>(
+			r,
+			isMarketsShortSellingResponse,
+			'MarketsShortSellingResponse',
+			'marketsShortSelling()'
+		);
+	}
+	
+
+	//                        _        _       ____  _                _   ____       _ _ _             ____           _ _   _                 
+	//   _ __ ___   __ _ _ __| | _____| |_ ___/ ___|| |__   ___  _ __| |_/ ___|  ___| | (_)_ __   __ _|  _ \ ___  ___(_) |_(_) ___  _ __  ___ 
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __\___ \| '_ \ / _ \| '__| __\___ \ / _ \ | | | '_ \ / _` | |_) / _ \/ __| | __| |/ _ \| '_ \/ __|
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |  __/ (_) \__ \ | |_| | (_) | | | \__ \
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |_|   \___/|___/_|\__|_|\___/|_| |_|___/
+	//                                                                                           |___/                                                                                                                                 |___/                                                      |_|                         
+	async marketsShortSellingPositions(
+		{
+			code,
+			disclosed_date,
+			disclosed_date_from,
+			disclosed_date_to,
+			calculated_date,
+			pagination_key
+		}:
+		{
+			code?: string;
+			disclosed_date?:	string | Date | Dayjs;
+			disclosed_date_from?:	string | Date | Dayjs;
+			disclosed_date_to?:	string | Date | Dayjs;
+			calculated_date?:	string | Date | Dayjs;
+			pagination_key?: string;
+		}
+	): Promise<Result<MarketsShortSellingPositionsResponse,AxiosError | unknown>>
+	{
+		if( (! code && ! calculated_date ) )
+		{
+			return Result.failure('marketsShortSellingPositions() requires either "code" or "calculated_date", or both.');
+		}
+
+		let flag = 0b0000;
+		const disclosedDateFlag = 1 << 0;
+		const disclosedDateFromToFlag = 1 << 1;
+		const calculatedDateFlag = 1 << 2;
+		if( disclosed_date )							{ flag = flag | disclosedDateFlag }
+		if( disclosed_date_from || disclosed_date_to )	{ flag = flag | disclosedDateFromToFlag }
+		if( calculated_date )							{ flag = flag | calculatedDateFlag }
+
+		if( code )
+		{
+			if( flag & (flag -1 ) && flag !== 0 )
+			{
+				return Result.failure('When specifying "code" in marketsShortSellingPositions(), only one of "disclosed_date", "disclosed_date_from"/"disclosed_date_to" ,"calculated_date" can be specified.');
+			}
+		}
+		else
+		{
+			if( disclosed_date_from || disclosed_date_to )
+			{
+				return Result.failure('Cannot specify "disclosed_date_from"/"disclosed_date_to" when "code" is not specified in marketsShortSellingPositions().');
+			}
+			else if( disclosed_date && calculated_date )
+			{
+				return Result.failure('Cannot specify both "disclosed_date" and "calculated_date" when "code" is not specified in marketsShortSellingPositions().');
+			}
+		}
+
+		const params:{ [key in string]: string} = {};
+		if( code				){ params['code']					= code }
+		if( disclosed_date		){ params['disclosed_date']			= this.toJQDate( disclosed_date ) }
+		if( disclosed_date_from	){ params['disclosed_date_from']	= this.toJQDate( disclosed_date_from ) }
+		if( disclosed_date_to	){ params['disclosed_date_to']		= this.toJQDate( disclosed_date_to ) }
+		if( calculated_date		){ params['calculated_date']		= this.toJQDate( calculated_date ) }
+		if( pagination_key		){ params['pagination_key']			= pagination_key }
+
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsShortSellingApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<MarketsShortSellingPositionsResponse>(
+			r,
+			isMarketsShortSellingPositionsResponse,
+			'MarketsShortSellingPositionsResponse',
+			'marketsShortSellingPositions()'
 		);
 	}
 
 
 	// API: /markets/breakdown
-	//                        _        _           _                    _       _                     
-	//   _ __ ___   __ _ _ __| | _____| |_ ___    | |__  _ __ ___  __ _| | ____| | _____      ___ __  
-	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __|   | '_ \| '__/ _ \/ _` | |/ / _` |/ _ \ \ /\ / / '_ \ 
-	//  | | | | | | (_| | |  |   <  __/ |_\__ \   | |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |
-	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/___|_.__/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_|
-	//                                       |_____|                                                  
+	//                        _        _       ____                 _       _                     
+	//   _ __ ___   __ _ _ __| | _____| |_ ___| __ ) _ __ ___  __ _| | ____| | _____      ___ __  
+	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __|  _ \| '__/ _ \/ _` | |/ / _` |/ _ \ \ /\ / / '_ \ 
+	//  | | | | | | (_| | |  |   <  __/ |_\__ \ |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |
+	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_|
+	//                                                                                            
 	async marketsBreakdown(
 		{
 			code,
@@ -984,21 +1213,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<MarketsBreakdownResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('marketsBreakdown() requires either "code" or "date", but not both.');
+			return Result.failure('marketsBreakdown() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsBreakdown().');
+			return Result.failure('If "from" or "to" is used, both must be defined in marketsBreakdown().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1008,13 +1237,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.markets_breakdown_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsBreakdownApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<MarketsBreakdownResponse>(
+			r,
+			isMarketsBreakdownResponse,
+			'MarketsBreakdownResponse',
+			'marketsBreakdown()'
 		);
 	}
 
@@ -1036,11 +1270,11 @@ export default class JQuantsAPIHandler
 			from?:	string | Date | Dayjs;
 			to?:	string | Date | Dayjs;
 		}
-	): Promise<Result>
+	): Promise<Result<MarketsTradingCalendarResponse ,AxiosError | unknown>>
 	{
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in marketsTradingCalendar().');
+			return Result.failure('If "from" or "to" is used, both must be defined in marketsTradingCalendar().');
 		}
 
 		const params:{
@@ -1053,13 +1287,18 @@ export default class JQuantsAPIHandler
 		if( from			){ params['from']				= this.toJQDate( from ) }
 		if( to				){ params['to']					= this.toJQDate( to ) }
 		
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.markets_trading_calendar_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.marketsTradingCalendarApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<MarketsTradingCalendarResponse>(
+			r,
+			isMarketsTradingCalendarResponse,
+			'MarketsTradingCalendarResponse',
+			'marketsTradingCalendar()'
 		);
 	}
 
@@ -1086,21 +1325,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<IndicesResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('indices() requires either "code" or "date", but not both.');
+			return Result.failure('indices() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in indices().');
+			return Result.failure('If "from" or "to" is used, both must be defined in indices().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1110,13 +1349,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.indices_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.indicesApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<IndicesResponse>(
+			r,
+			isIndicesResponse,
+			'IndicesResponse',
+			'indices()'
 		);
 	}
 
@@ -1138,20 +1382,25 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<IndicesTopixResponse ,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 		if( from			){ params['from']			= this.toJQDate( from ) }
 		if( to				){ params['to']				= this.toJQDate( to ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 		
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.indices_topix_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.indicesTopixApiUrl,
+				params: params
+			}
+		);
+		
+		return JQuantsAPIHandler._makeAPIResult<IndicesTopixResponse>(
+			r,
+			isIndicesTopixResponse,
+			'IndicesTopixResponse',
+			'indicesTopix()'
 		);
 	}
 
@@ -1174,11 +1423,11 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<FinsStatementsResponse, AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsStatements() requires either "code" or "date", but not both.');
+			return Result.failure('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1186,13 +1435,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.fins_statements_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.finsStatementsApiUrl,
+				params: params
+			}
+		);
+		
+		return JQuantsAPIHandler._makeAPIResult<FinsStatementsResponse>(
+			r,
+			isFinsStatementsResponse,
+			'FinsStatementsResponse',
+			'finsStatements()'
 		);
 	}
 
@@ -1215,11 +1469,11 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<FinsFsDetailsResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsStatements() requires either "code" or "date", but not both.');
+			return Result.failure('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1227,13 +1481,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.fins_fs_details_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.finsFsDetailsApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<FinsFsDetailsResponse>(
+			r,
+			isFinsFsDetailsResponse,
+			'FinsFsDetailsResponse',
+			'finsFsDetails()'
 		);
 	}
 
@@ -1260,21 +1519,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result>
+	): Promise<Result<FinsDividendResponse, AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return this.failureResult('finsDividend() requires either "code" or "date", but not both.');
+			return Result.failure('finsDividend() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return this.failureResult('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return Result.failure('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return this.failureResult('If “from” or “to” is used, both must be defined in finsDividend().');
+			return Result.failure('If "from" or "to" is used, both must be defined in finsDividend().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1284,13 +1543,18 @@ export default class JQuantsAPIHandler
 		if( date			){ params['date']			= this.toJQDate( date ) }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.fins_dividend_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.finsDividendApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<FinsDividendResponse>(
+			r,
+			isFinsDividendResponse,
+			'FinsDividendResponse',
+			'finsDividend()'
 		);
 	}
 
@@ -1309,18 +1573,23 @@ export default class JQuantsAPIHandler
 		{
 			pagination_key?: string;
 		} = {}
-	)
+	):Promise<Result<FinsAnnouncementResponse ,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.fins_announcement_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.finsAnnouncementApiUrl,
+				params: params
+			}
+		);
+		
+		return JQuantsAPIHandler._makeAPIResult<FinsAnnouncementResponse>(
+			r,
+			isFinsAnnouncementResponse,
+			'FinsAnnouncementResponse',
+			'finsAnnouncement()'
 		);
 	}
 
@@ -1341,7 +1610,7 @@ export default class JQuantsAPIHandler
 			date:				string | Date | Dayjs;
 			pagination_key?:	string;
 		}
-	): Promise<Result>
+	): Promise<Result<OptionIndexOptionResponse ,AxiosError | unknown>>
 	{
 		const params:
 		{
@@ -1351,13 +1620,18 @@ export default class JQuantsAPIHandler
 
 		if( pagination_key		){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.optionIndexOption_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.optionIndexOptionApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<OptionIndexOptionResponse>(
+			r,
+			isOptionIndexOptionResponse,
+			'OptionIndexOptionResponse',
+			'optionIndexOption()'
 		);
 	}
 
@@ -1383,7 +1657,7 @@ export default class JQuantsAPIHandler
 			contract_flag?:		string;
 			pagination_key?:	string;
 		}
-	): Promise<Result>
+	): Promise<Result<DerivativesFuturesResponse,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 
@@ -1393,13 +1667,18 @@ export default class JQuantsAPIHandler
 		if( contract_flag	){ params['contract_flag']	= contract_flag }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.derivatives_futures_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.derivativesFuturesApiUrl,
+				params: params
+			}
+		);
+
+		return JQuantsAPIHandler._makeAPIResult<DerivativesFuturesResponse>(
+			r,
+			isDerivativesFuturesResponse,
+			'DerivativesFuturesResponse',
+			'derivativesFutures()'
 		);
 	}
 
@@ -1422,11 +1701,11 @@ export default class JQuantsAPIHandler
 			contract_flag?:		string;
 			pagination_key?:	string;
 		}
-	)
+	):Promise<Result<DerivativesOptionsResponse ,AxiosError | unknown>>
 	{
 		if( code && category !== 'EQOP' )
 		{
-			return this.failureResult("'code' can be specified only when 'EQOP' is specified for the category.");
+			return Result.failure("'code' can be specified only when 'EQOP' is specified for the category.");
 		}
 
 		const params:{ [key in string]: string} =
@@ -1439,13 +1718,18 @@ export default class JQuantsAPIHandler
 		if( contract_flag	){ params['contract_flag']	= contract_flag }
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
 
-		return this.returnResult(
-			await this._request_with_auth_header(
-				{
-					url: this.derivatives_options_api_url,
-					params: params
-				}
-			)
+		const r = await this._request_with_auth_header(
+			{
+				url: this.derivativesOptionsApiUrl,
+				params: params
+			}
+		);
+		
+		return JQuantsAPIHandler._makeAPIResult<DerivativesOptionsResponse>(
+			r,
+			isDerivativesOptionsResponse,
+			'DerivativesOptionsResponse',
+			'derivativesOptions()'
 		);
 	}
 
@@ -1454,7 +1738,7 @@ export default class JQuantsAPIHandler
 	// Utility
 	// - - - - - - - - - - - - - - - - - - - -
 	/**
-	 * Convert the specified date to a string in the “YYYY-MM-DD” format
+	 * Convert the specified date to a string in the "YYYY-MM-DD" format
 	 * required by the J-QUANTS API.
 	 * 
 	 * @param {string | Date | Dayjs} date - The input date to be converted. It can be:
@@ -1496,20 +1780,5 @@ export default class JQuantsAPIHandler
 		{
 			throw Error('The date is neither a Date object nor a Dayjs object, nor is it a string in "YYYY-MM-DD" format.');
 		}
-	}
-
-	protected successResult(...args: ResultMakerArgsT ):Result
-	{
-		return this._last_result = Result.success( ...args );
-	}
-
-	protected failureResult(...args: ResultMakerArgsT ):Result
-	{
-		return this._last_result = Result.failure( ...args );
-	}
-
-	protected returnResult( r: Result ): Result
-	{
-		return this._last_result = r;
 	}
 }

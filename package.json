@@ -4,7 +4,8 @@
   "main": "dist/j-quants.js",
   "exports": {
     ".": "./dist/j-quants.js",
-    "./extra": "./dist/extra.js"
+    "./extra": "./dist/extra.js",
+    "./type-guard": "./dist/type-guard.js"
   },
   "type": "commonjs",
   "files": [

@@ -24,13 +24,12 @@ $ ts-node api-pricesDailyQuotes.ts
 
 import JQC from '../src/j-quants';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
-
-import Result from '@tettekete/result';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
 // if you install `@tettekete/jquants-client` package, you can use it like this:
 // import JQC from '@tettekete/jquants-client';
 // import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
@@ -47,7 +46,7 @@ const jqc = new JQC({
 		}
 	);
 
-	if( Result.isSuccess( r ) )
+	if( r.ok )
 	{
 		// r.data is inferred as PriceDailyQuotesResponse,
 		// so you can access properties like r.data.daily_quotes[0].AdjustmentClose

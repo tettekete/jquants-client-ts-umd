@@ -46,7 +46,7 @@
     "webpack-node-externals": "^3.0.0"
   },
   "dependencies": {
-    "@tettekete/result": "^1.2.1",
+    "@tettekete/du-result": "^1.0.0",
     "axios": "^1.7.4",
     "dayjs": "^1.11.13",
     "fs-extra": "^11.2.0",

@@ -41,8 +41,6 @@ $ ts-node api-listedInfo.ts | jq -r '.info[] | [.Code, .CompanyName] | @tsv'
 
 import JQC from '../src/j-quants';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
-
-import Result from '@tettekete/result';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
 // if you install `@tettekete/jquants-client` package, you can use it like this:
@@ -65,7 +63,7 @@ const jqc = new JQC({
 		}
 	);
 
-	if( Result.isSuccess( r ) )
+	if( r.ok )
 	{
 		// r.data is inferred as ListedInfoResponse,
 		// so you can access properties like r.data.info[0].Code

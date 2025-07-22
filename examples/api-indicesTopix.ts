@@ -31,8 +31,6 @@ import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axio
 // import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
 // import { isAxiosError } from '@tettekete/jquants-client/type-guard';
 
-import Result from '@tettekete/result';
-
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
 	tokenStore: new YAMLAPITokenStore()
@@ -47,7 +45,7 @@ const jqc = new JQC({
 		}
 	);
 
-	if( Result.isSuccess( r ) )
+	if( r.ok )
 	{
 		// r.data is inferred as IndicesTopixResponse,
 		// so you can access properties like r.data.topix[0].Close

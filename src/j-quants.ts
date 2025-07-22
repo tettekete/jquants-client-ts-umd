@@ -1,5 +1,5 @@
 import ExURL ,{ HTTP_METHODS_T } from './util/exUrl';
-import Result from '@tettekete/result';
+import DUResult,{DUResultT} from '@tettekete/du-result';
 import { getLogger } from './util/logger';
 import axios, { AxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import dayjs ,{Dayjs} from 'dayjs';
@@ -444,10 +444,10 @@ export default class JQuantsAPIHandler
 	async request_with_axios(
 		req: AxiosRequestConfig
 	): Promise<
-		Result<AxiosResponse , AxiosError | unknown>
+		DUResultT<AxiosResponse , AxiosError | unknown>
 	>
 	{
-		let result: Result<AxiosResponse , AxiosError | unknown>;
+		let result: DUResultT<AxiosResponse , AxiosError | unknown>;
 		try
 		{
 			this.lg.trace(`request_with_axios: ${req.method} ${req.url}`);
@@ -456,7 +456,7 @@ export default class JQuantsAPIHandler
 			this.lg.trace(`request path: ${Object.prototype.hasOwnProperty.call(res, 'request') ? res.request.path : 'unknown'}`);
 			this.lg.trace(`status: ${res.status} ${res.statusText}`);
 
-			result = Result.success<AxiosResponse>( res );
+			result = DUResult.success<AxiosResponse>( res );
 
 			this.lg.trace(`data: ${JSON.stringify( res.data ,null ,2)}`.substring(0,80) + ' ...');
 		}
@@ -464,11 +464,11 @@ export default class JQuantsAPIHandler
 		{
 			if( e instanceof AxiosError )
 			{
-				result = Result.failure<AxiosError>( "AxiosError was thrown." ,e );
+				result = DUResult.failure<AxiosError>( "AxiosError was thrown." ,e );
 			}
 			else
 			{
-				result = Result.failure( "Unknown error" , e );
+				result = DUResult.failure( "Unknown error" , e );
 			}
 			
 		}
@@ -485,14 +485,14 @@ export default class JQuantsAPIHandler
 			url: ExURL;
 			params: { [key in string]: string | number }
 		}
-	): Promise<Result<AxiosResponse , AxiosError | unknown>>
+	): Promise<DUResultT<AxiosResponse , AxiosError | unknown>>
 	{
 		if( this._autoTokenRefresh )
 		{
 			const idToken = await this.getIdToken();
 			if( ! idToken )
 			{
-				return Result.failure( "Failed to obtain ID token." );
+				return DUResult.failure( "Failed to obtain ID token." );
 			}
 		}
 
@@ -533,7 +533,7 @@ export default class JQuantsAPIHandler
 	 * @param param0 
 	 * @returns 
 	 */
-	async getRefreshTokenResult(): Promise<Result<TOKEN_RECORD ,AxiosError | unknown>>
+	async getRefreshTokenResult(): Promise<DUResultT<TOKEN_RECORD ,AxiosError | unknown>>
 	{
 		const exUrl		= this.refreshApiUrl;
 		const _email	= await this._credsStore.user();
@@ -541,7 +541,7 @@ export default class JQuantsAPIHandler
 
 		if( ! _email || ! _pw )
 		{
-			return Result.failure("Either email or password is not defined.");
+			return DUResult.failure("Either email or password is not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -558,7 +558,7 @@ export default class JQuantsAPIHandler
 
 		const r = await this.request_with_axios( req );
 
-		if( Result.isSuccess( r )
+		if( r.ok
 			&& isTokenAuthUserResponse( r.data.data )
 			)
 		{
@@ -571,14 +571,14 @@ export default class JQuantsAPIHandler
 			await this._tokenStore.set_refresh_token_info( tokenRec );
 			this._refreshTokenRecord = tokenRec;
 
-			return Result.success<TOKEN_RECORD>( tokenRec );
+			return DUResult.success<TOKEN_RECORD>( tokenRec );
 		}
-		else if( Result.isFailure( r ) )
+		else if( r.ng )
 		{
 			return r;
 		}
 		
-		return Result.failure("Unknown error." , r.data );
+		return DUResult.failure("Unknown error." , r.data );
 	}
 
 
@@ -645,9 +645,11 @@ export default class JQuantsAPIHandler
 	 * 同レコードは this._idTokenRecord にもキャッシュして格納される。
 	 *
 	 * @async
-	 * @param {Object} args
-	 * @param {string} args.refresh_token - リフレッシュトークン
-	 * @returns {Promise<Result>} r - r.data is ID token when r.ok
+	 * @param {{
+	 * 		refresh_token?:		string | undefined;
+	 * 	}} [param0={}] 
+	 * @param {string} param0.refresh_token - リフレッシュトークン
+	 * @returns {Promise<DUResultT<TOKEN_RECORD , AxiosError | unknown>>} - r.data is ID token when r.ok
 	 * 	
 	 */
 	async getIDTokenResult(
@@ -656,14 +658,14 @@ export default class JQuantsAPIHandler
 	}
 	:{
 		refresh_token?:		string | undefined;
-	} = {}): Promise<Result<TOKEN_RECORD , AxiosError | unknown>>
+	} = {}): Promise<DUResultT<TOKEN_RECORD , AxiosError | unknown>>
 	{
 		const exUrl = this.idTokenApiUrl;
 
 		const _refresh_token = refresh_token ?? this.refreshToken;
 		if(! _refresh_token )
 		{
-			return Result.failure("refresh_token not defined.");
+			return DUResult.failure("refresh_token not defined.");
 		}
 
 		const req: AxiosRequestConfig =
@@ -679,7 +681,7 @@ export default class JQuantsAPIHandler
 		const r = await this.request_with_axios( req );
 
 		if(
-			Result.isSuccess( r )
+			r.ok
 			&& isTokenAuthRefreshResponse( r.data.data )
 		)
 		{
@@ -692,14 +694,14 @@ export default class JQuantsAPIHandler
 			
 			await this._tokenStore.set_id_token_info( tokenRec );
 			this._idTokenRecord = tokenRec;
-			return Result.success<TOKEN_RECORD>( tokenRec );
+			return DUResult.success<TOKEN_RECORD>( tokenRec );
 		}
-		else if( Result.isFailure( r ) )
+		else if( r.ng )
 		{
 			return r;
 		}
 
-		return Result.failure("Invalid error." , r.data );
+		return DUResult.failure("Invalid error." , r.data );
 	}
 
 
@@ -764,36 +766,32 @@ export default class JQuantsAPIHandler
 
 
 	private static _makeAPIResult<EXPECTED_TYPE>(
-		r:Result<AxiosResponse,AxiosError | unknown> 
+		r:DUResultT<AxiosResponse,AxiosError | unknown> 
 		,typeGuardFn: (value: unknown) => value is EXPECTED_TYPE
 		,typeName: string
 		,methodOrAPIName: string
 	)
-	:Result<EXPECTED_TYPE,AxiosError | unknown>
+	:DUResultT<EXPECTED_TYPE,AxiosError | unknown>
 	{
-		if( Result.isSuccess( r ) && r.data  )
+		if( r.ok  )
 		{	
 			if( typeGuardFn( r.data.data ) )
 			{
-				return Result.success<EXPECTED_TYPE>( r.message , r.data.data );
+				return DUResult.success<EXPECTED_TYPE>( r.message , r.data.data );
 			}
 			else if( ! r.data )
 			{
-				return Result.failure('Invalid error: .data property is falsy.');
+				return DUResult.failure('Invalid error: .data property is falsy.');
 			}
 			else
 			{
-				return Result.failure(`Type guard error: .data type is not ${typeName}.`);
+				return DUResult.failure(`Type guard error: .data type is not ${typeName}.`);
 			}
-		}
-		else if( Result.isFailure( r ) )
-		{
-			return r;
 		}
 		else
 		{
-			return Result.failure(`Invalid error occurred at ${methodOrAPIName}.`);
-		}
+			return r;
+		}	
 	}
 
 	// API: /listed/info
@@ -804,7 +802,7 @@ export default class JQuantsAPIHandler
 	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
 	//                                             
 	async listedInfo({code , date}:{code?: string, date?: string | Date | Dayjs } = {})
-		:Promise<Result<ListedInfoResponse,AxiosError | unknown>>
+		:Promise<DUResultT<ListedInfoResponse,AxiosError | unknown>>
 	{
 		const params:{code?: string, date?: string } = {};
 		if( code ){ params['code'] = code }
@@ -848,22 +846,22 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?:	string
 		}
-	): Promise<Result<PriceDailyQuotesResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<PriceDailyQuotesResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('pricesDailyQuotes() requires either "code" or "date", but not both.');
+			return DUResult.failure('pricesDailyQuotes() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
+			return DUResult.failure('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -909,7 +907,7 @@ export default class JQuantsAPIHandler
 	 * @param {Object} params - The parameters for the request.
 	 * @param {string} [params.code] - The stock code to filter the results (optional).
 	 * @param {string} [params.pagination_key] - The pagination key for retrieving the next set of results (optional).
-	 * @returns {Promise<Result>} A promise that resolves to the result of the API call.
+	 * @returns {Promise<DUResultT<PricePricesAmResponse ,AxiosError | unknown>>} - A promise that resolves to the result of the API call.
 	 */
 	async pricesPricesAm({
 		code,
@@ -918,7 +916,7 @@ export default class JQuantsAPIHandler
 	:{
 		code?: string;
 		pagination_key?: string
-	}): Promise<Result<PricePricesAmResponse ,AxiosError | unknown>>
+	}): Promise<DUResultT<PricePricesAmResponse ,AxiosError | unknown>>
 	{
 		const params:{code?: string, pagination_key?: string } = {};
 		if( code )				{ params['code'] = code }
@@ -957,7 +955,7 @@ export default class JQuantsAPIHandler
 			from?: string | Date | Dayjs;
 			to?: string | Date | Dayjs;
 		} = {}
-	): Promise<Result<MarketsTradesSpecResponse , AxiosError | unknown >>
+	): Promise<DUResultT<MarketsTradesSpecResponse , AxiosError | unknown >>
 	{
 		const params:{ [key in string]: string} = {};
 
@@ -1002,27 +1000,27 @@ export default class JQuantsAPIHandler
 			to?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<MarketsWeeklyMarginInterestResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<MarketsWeeklyMarginInterestResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
+			return DUResult.failure('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
 		}
 
 		if( code && (! from || ! to) )
 		{
-			return Result.failure('When specifying "code" in marketsWeeklyMarginInterest(), "from" and "to" are required.');
+			return DUResult.failure('When specifying "code" in marketsWeeklyMarginInterest(), "from" and "to" are required.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('If "from" or "to" is used, both must be defined in marketsWeeklyMarginInterest().');
+			return DUResult.failure('If "from" or "to" is used, both must be defined in marketsWeeklyMarginInterest().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1070,21 +1068,21 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<MarketsShortSellingResponse,AxiosError | unknown>>
+	): Promise<DUResultT<MarketsShortSellingResponse,AxiosError | unknown>>
 	{
 		if( (! sector33code && ! date ) )
 		{
-			return Result.failure('marketsShortSelling() requires either "code" or "date", or both.');
+			return DUResult.failure('marketsShortSelling() requires either "code" or "date", or both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
+			return DUResult.failure('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1133,11 +1131,11 @@ export default class JQuantsAPIHandler
 			calculated_date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<MarketsShortSellingPositionsResponse,AxiosError | unknown>>
+	): Promise<DUResultT<MarketsShortSellingPositionsResponse,AxiosError | unknown>>
 	{
 		if( (! code && ! calculated_date ) )
 		{
-			return Result.failure('marketsShortSellingPositions() requires either "code" or "calculated_date", or both.');
+			return DUResult.failure('marketsShortSellingPositions() requires either "code" or "calculated_date", or both.');
 		}
 
 		let flag = 0b0000;
@@ -1152,18 +1150,18 @@ export default class JQuantsAPIHandler
 		{
 			if( flag & (flag -1 ) && flag !== 0 )
 			{
-				return Result.failure('When specifying "code" in marketsShortSellingPositions(), only one of "disclosed_date", "disclosed_date_from"/"disclosed_date_to" ,"calculated_date" can be specified.');
+				return DUResult.failure('When specifying "code" in marketsShortSellingPositions(), only one of "disclosed_date", "disclosed_date_from"/"disclosed_date_to" ,"calculated_date" can be specified.');
 			}
 		}
 		else
 		{
 			if( disclosed_date_from || disclosed_date_to )
 			{
-				return Result.failure('Cannot specify "disclosed_date_from"/"disclosed_date_to" when "code" is not specified in marketsShortSellingPositions().');
+				return DUResult.failure('Cannot specify "disclosed_date_from"/"disclosed_date_to" when "code" is not specified in marketsShortSellingPositions().');
 			}
 			else if( disclosed_date && calculated_date )
 			{
-				return Result.failure('Cannot specify both "disclosed_date" and "calculated_date" when "code" is not specified in marketsShortSellingPositions().');
+				return DUResult.failure('Cannot specify both "disclosed_date" and "calculated_date" when "code" is not specified in marketsShortSellingPositions().');
 			}
 		}
 
@@ -1213,21 +1211,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<MarketsBreakdownResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<MarketsBreakdownResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('marketsBreakdown() requires either "code" or "date", but not both.');
+			return DUResult.failure('marketsBreakdown() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('If "from" or "to" is used, both must be defined in marketsBreakdown().');
+			return DUResult.failure('If "from" or "to" is used, both must be defined in marketsBreakdown().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1270,11 +1268,11 @@ export default class JQuantsAPIHandler
 			from?:	string | Date | Dayjs;
 			to?:	string | Date | Dayjs;
 		}
-	): Promise<Result<MarketsTradingCalendarResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<MarketsTradingCalendarResponse ,AxiosError | unknown>>
 	{
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('If "from" or "to" is used, both must be defined in marketsTradingCalendar().');
+			return DUResult.failure('If "from" or "to" is used, both must be defined in marketsTradingCalendar().');
 		}
 
 		const params:{
@@ -1325,21 +1323,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<IndicesResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<IndicesResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('indices() requires either "code" or "date", but not both.');
+			return DUResult.failure('indices() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('If "from" or "to" is used, both must be defined in indices().');
+			return DUResult.failure('If "from" or "to" is used, both must be defined in indices().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1382,7 +1380,7 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<IndicesTopixResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<IndicesTopixResponse ,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 		if( from			){ params['from']			= this.toJQDate( from ) }
@@ -1423,11 +1421,11 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<FinsStatementsResponse, AxiosError | unknown>>
+	): Promise<DUResultT<FinsStatementsResponse, AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('finsStatements() requires either "code" or "date", but not both.');
+			return DUResult.failure('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1469,11 +1467,11 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<FinsFsDetailsResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<FinsFsDetailsResponse ,AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('finsStatements() requires either "code" or "date", but not both.');
+			return DUResult.failure('finsStatements() requires either "code" or "date", but not both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1519,21 +1517,21 @@ export default class JQuantsAPIHandler
 			to?: 	string | Date | Dayjs;
 			pagination_key?: string;
 		}
-	): Promise<Result<FinsDividendResponse, AxiosError | unknown>>
+	): Promise<DUResultT<FinsDividendResponse, AxiosError | unknown>>
 	{
 		if( (! code && ! date) || ( code && date ) )
 		{
-			return Result.failure('finsDividend() requires either "code" or "date", but not both.');
+			return DUResult.failure('finsDividend() requires either "code" or "date", but not both.');
 		}
 
 		if( date && (from || to ) )
 		{
-			return Result.failure('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
+			return DUResult.failure('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
 		}
 
 		if( (from || to) && ( ! from || ! to ) )
 		{
-			return Result.failure('If "from" or "to" is used, both must be defined in finsDividend().');
+			return DUResult.failure('If "from" or "to" is used, both must be defined in finsDividend().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1573,7 +1571,7 @@ export default class JQuantsAPIHandler
 		{
 			pagination_key?: string;
 		} = {}
-	):Promise<Result<FinsAnnouncementResponse ,AxiosError | unknown>>
+	):Promise<DUResultT<FinsAnnouncementResponse ,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 		if( pagination_key	){ params['pagination_key']	= pagination_key }
@@ -1610,7 +1608,7 @@ export default class JQuantsAPIHandler
 			date:				string | Date | Dayjs;
 			pagination_key?:	string;
 		}
-	): Promise<Result<OptionIndexOptionResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<OptionIndexOptionResponse ,AxiosError | unknown>>
 	{
 		const params:
 		{
@@ -1657,7 +1655,7 @@ export default class JQuantsAPIHandler
 			contract_flag?:		string;
 			pagination_key?:	string;
 		}
-	): Promise<Result<DerivativesFuturesResponse,AxiosError | unknown>>
+	): Promise<DUResultT<DerivativesFuturesResponse,AxiosError | unknown>>
 	{
 		const params:{ [key in string]: string} = {};
 
@@ -1701,11 +1699,11 @@ export default class JQuantsAPIHandler
 			contract_flag?:		string;
 			pagination_key?:	string;
 		}
-	):Promise<Result<DerivativesOptionsResponse ,AxiosError | unknown>>
+	):Promise<DUResultT<DerivativesOptionsResponse ,AxiosError | unknown>>
 	{
 		if( code && category !== 'EQOP' )
 		{
-			return Result.failure("'code' can be specified only when 'EQOP' is specified for the category.");
+			return DUResult.failure("'code' can be specified only when 'EQOP' is specified for the category.");
 		}
 
 		const params:{ [key in string]: string} =

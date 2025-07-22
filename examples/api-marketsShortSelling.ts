@@ -26,8 +26,6 @@ import JQC from '../src/j-quants';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-import Result from '@tettekete/result';
-
 // if you install `@tettekete/jquants-client` package, you can use it like this:
 // import JQC from '@tettekete/jquants-client';
 // import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
@@ -46,7 +44,7 @@ const jqc = new JQC({
 		}
 	);
 
-	if( Result.isSuccess( r ) )
+	if( r.ok )
 	{
 		// r.data is inferred as MarketsTradesSpecResponse,
 		// so you can access properties like r.data.short_selling[0].Date

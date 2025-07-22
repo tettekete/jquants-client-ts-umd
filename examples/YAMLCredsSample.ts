@@ -34,8 +34,6 @@ import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axio
 // import { YAMLCredentialStore } from '@tettekete/jquants-client/extra';
 // import { isAxiosError } from '@tettekete/jquants-client/type-guard';
 
-import Result from '@tettekete/result';
-
 // set moduleResolution to NodeNext or node16 in tsconfig.json
 
 const creds_store = new YAMLCredentialStore(
@@ -62,7 +60,7 @@ const jqc = new JQC(
 		}
 	);
 
-	if( Result.isSuccess( r ) )
+	if( r.ok )
 	{
 		if( typeof r.data === 'object' )
 		{

@@ -72,7 +72,7 @@ export type TokenAuthRefreshResponse =
 //  | |___| \__ \ ||  __/ (_| || || | | |  _| (_) /  \  /  \  /  \ 
 //  |_____|_|___/\__\___|\__,_|___|_| |_|_|  \___/_/\_\/_/\_\/_/\_\
 //                                                                 
-export interface ListedInfoItem
+export type ListedInfoItem =
 {
 	Date: string;
 	Code: string;
@@ -87,12 +87,12 @@ export interface ListedInfoItem
 	MarketCodeName: string;
 	MarginCode: string;
 	MarginCodeName: string;
-}
+};
 
-export interface ListedInfoResponse
+export type ListedInfoResponse =
 {
 	info: ListedInfoItem[];
-}
+};
 
 
 //   ____       _          ____        _ _        ___              _           __  ____  ____  __
@@ -103,7 +103,7 @@ export interface ListedInfoResponse
 //                                         |___/                                                 
 
 // 株価四本値(/prices/daily_quotes)
-export interface PriceDailyQuoteItem
+export type PriceDailyQuoteItem =
 {
 	Date: string;
 	Code: string;
@@ -147,13 +147,13 @@ export interface PriceDailyQuoteItem
 	AfternoonAdjustmentLow?: number;
 	AfternoonAdjustmentClose?: number;
 	AfternoonAdjustmentVolume?: number;
-}
+};
 
-export interface PriceDailyQuotesResponse
+export type PriceDailyQuotesResponse =
 {
   daily_quotes: PriceDailyQuoteItem[];
   pagination_key?: string;
-}
+};
 
 
 //   ____       _          ____       _                  _             __  ____  ____  __
@@ -162,7 +162,7 @@ export interface PriceDailyQuotesResponse
 //  |  __/| |  | | (_|  __/  __/| |  | | (_|  __/\__ \/ ___ \| | | | | |/  \  /  \  /  \ 
 //  |_|   |_|  |_|\___\___|_|   |_|  |_|\___\___||___/_/   \_\_| |_| |_/_/\_\/_/\_\/_/\_\
 //
-export interface PricePricesAmItem
+export type PricePricesAmItem =
 {
 	Date: string;
 	Code: string;
@@ -172,13 +172,13 @@ export interface PricePricesAmItem
 	MorningClose: number;
 	MorningVolume: number;
 	MorningTurnoverValue: number;
-}
+};
 
-export interface PricePricesAmResponse
+export type PricePricesAmResponse =
 {
   daily_quotes: PricePricesAmItem[];
   pagination_key?: string;
-}
+};
 
 
 //   __  __            _        _      _____              _           ____                  
@@ -187,7 +187,7 @@ export interface PricePricesAmResponse
 //  | |  | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| |  __/\__ \___) | |_) |  __/ (__ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|\___||___/____/| .__/ \___|\___|
 //                                                                         |_|              
-export interface MarketsTradesSpecItem
+export type MarketsTradesSpecItem =
 {
 	PublishedDate: string;
 	StartDate: string;
@@ -245,13 +245,13 @@ export interface MarketsTradesSpecItem
 	OtherFinancialInstitutionsPurchases: number;
 	OtherFinancialInstitutionsTotal: number;
 	OtherFinancialInstitutionsBalance: number;
-}
+};
 
-export interface MarketsTradesSpecResponse
+export type MarketsTradesSpecResponse =
 {
 	trades_spec: MarketsTradesSpecItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   __  __            _        _     __        __        _    _       __  __                 _       ___       _                     _  __  ____  ____  __
@@ -260,7 +260,7 @@ export interface MarketsTradesSpecResponse
 //  | |  | | (_| | |  |   <  __/ |_\__ \\ V  V /  __/  __/   <| | |_| | |  | | (_| | | | (_| | | | | || || | | | ||  __/ | |  __/\__ \ |_ /  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/ \_/\_/ \___|\___|_|\_\_|\__, |_|  |_|\__,_|_|  \__, |_|_| |_|___|_| |_|\__\___|_|  \___||___/\__/_/\_\/_/\_\/_/\_\
 //                                                               |___/                  |___/                                                              
-export interface MarketsWeeklyMarginInterestItem
+export type MarketsWeeklyMarginInterestItem =
 {
 	Date: string;
 	Code: string;
@@ -271,14 +271,14 @@ export interface MarketsWeeklyMarginInterestItem
 	ShortStandardizedMarginTradeVolume: number;
 	LongStandardizedMarginTradeVolume: number;
 	IssueType: string
-}
+};
 
 
-export interface  MarketsWeeklyMarginInterestResponse
+export type  MarketsWeeklyMarginInterestResponse =
 {
 	weekly_margin_interest: MarketsWeeklyMarginInterestItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   __  __            _        _       ____  _                _   ____       _ _ _            __  ____  ____  __
@@ -287,20 +287,20 @@ export interface  MarketsWeeklyMarginInterestResponse
 //  | |  | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |/  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, /_/\_\/_/\_\/_/\_\
 //                                                                                        |___/                  
-export interface MarketsShortSellingItem
+export type MarketsShortSellingItem =
 {
 	Date: string;
 	Sector33Code: string;
 	SellingExcludingShortSellingTurnoverValue: number;
 	ShortSellingWithRestrictionsTurnoverValue: number;
 	ShortSellingWithoutRestrictionsTurnoverValue: number
-}
+};
 
-export interface MarketsShortSellingResponse
+export type MarketsShortSellingResponse =
 {
 	short_selling: MarketsShortSellingItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   __  __            _        _       ____  _                _   ____       _ _ _             ____           _ _   _                __  ____  ____  __
@@ -310,7 +310,7 @@ export interface MarketsShortSellingResponse
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |_|   \___/|___/_|\__|_|\___/|_| |_|___/_/\_\/_/\_\/_/\_\
 //                                                                                        |___/                                                         
 
-export interface MarketsShortSellingPositionsItem
+export type MarketsShortSellingPositionsItem =
 {
 	DisclosedDate: string;
 	CalculatedDate: string;
@@ -326,13 +326,13 @@ export interface MarketsShortSellingPositionsItem
 	CalculationInPreviousReportingDate: string;
 	ShortPositionsInPreviousReportingRatio: number;
 	Notes: string;
-}
+};
 
-export interface MarketsShortSellingPositionsResponse
+export type MarketsShortSellingPositionsResponse =
 {
 	short_selling_positions: MarketsShortSellingPositionsItem[];
 	pagination_key?: string
-}
+};
 
 //   __  __            _        _       ____                 _       _                    __  ____  ____  __
 //  |  \/  | __ _ _ __| | _____| |_ ___| __ ) _ __ ___  __ _| | ____| | _____      ___ __ \ \/ /\ \/ /\ \/ /
@@ -340,7 +340,7 @@ export interface MarketsShortSellingPositionsResponse
 //  | |  | | (_| | |  |   <  __/ |_\__ \ |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |/  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_/_/\_\/_/\_\/_/\_\
 //                                                                                                          
-export interface MarketsBreakdownItem
+export type MarketsBreakdownItem =
 {
 	Date: string; 
 	Code: string; 
@@ -358,26 +358,31 @@ export interface MarketsBreakdownItem
 	LongBuyVolume: number;
 	MarginBuyNewVolume: number;
 	MarginBuyCloseVolume: number;
-}
+};
 
-export interface MarketsBreakdownResponse
+export type MarketsBreakdownResponse =
 {
 	breakdown: MarketsBreakdownItem[];
 	pagination_key?: string
-}
+};
 
 
-// MarketsTradingCalendarXXX
-export interface MarketsTradingCalendarItem
+//   __  __            _        _      _____              _ _              ____      _                _          __  ____  ____  __
+//  |  \/  | __ _ _ __| | _____| |_ __|_   _| __ __ _  __| (_)_ __   __ _ / ___|__ _| | ___ _ __   __| | __ _ _ _\ \/ /\ \/ /\ \/ /
+//  | |\/| |/ _` | '__| |/ / _ \ __/ __|| || '__/ _` |/ _` | | '_ \ / _` | |   / _` | |/ _ \ '_ \ / _` |/ _` | '__\  /  \  /  \  / 
+//  | |  | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| | | | | | (_| | |__| (_| | |  __/ | | | (_| | (_| | |  /  \  /  \  /  \ 
+//  |_|  |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|_|_| |_|\__, |\____\__,_|_|\___|_| |_|\__,_|\__,_|_| /_/\_\/_/\_\/_/\_\
+//                                                                  |___/                                                          
+export type MarketsTradingCalendarItem =
 {
 	Date: string;
     HolidayDivision: string;
-}
+};
 
-export interface MarketsTradingCalendarResponse
+export type MarketsTradingCalendarResponse =
 {
 	trading_calendar: MarketsTradingCalendarItem[];
-}
+};
 
 //   ___           _ _              __  ____  ____  __
 //  |_ _|_ __   __| (_) ___ ___  ___\ \/ /\ \/ /\ \/ /
@@ -386,7 +391,7 @@ export interface MarketsTradingCalendarResponse
 //  |___|_| |_|\__,_|_|\___\___||___/_/\_\/_/\_\/_/\_\
 //                                                    
 
-export interface IndicesItem
+export type IndicesItem =
 {
 	Date: string;
 	Code: string;
@@ -394,13 +399,13 @@ export interface IndicesItem
 	High: number;
 	Low: number;
 	Close: number;
-}
+};
 
-export interface IndicesResponse
+export type IndicesResponse =
 {
 	indices: IndicesItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   ___           _ _              _____           _      __  ____  ____  __
@@ -409,20 +414,20 @@ export interface IndicesResponse
 //   | || | | | (_| | | (_|  __/\__ \| | (_) | |_) | |>  <  /  \  /  \  /  \ 
 //  |___|_| |_|\__,_|_|\___\___||___/|_|\___/| .__/|_/_/\_\/_/\_\/_/\_\/_/\_\
 //                                           |_|                             
-export interface IndicesTopixItem
+export type IndicesTopixItem =
 {
 	Date: string;
 	Open: number;
 	High: number;
 	Low: number;
 	Close: number;
-}
+};
 
-export interface IndicesTopixResponse
+export type IndicesTopixResponse =
 {
 	topix: IndicesTopixItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   _____ _           ____  _        _                            _      __  ____  ____  __
@@ -431,7 +436,7 @@ export interface IndicesTopixResponse
 //  |  _| | | | | \__ \___) | || (_| | ||  __/ | | | | |  __/ | | | |_\__ \/  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/____/ \__\__,_|\__\___|_| |_| |_|\___|_| |_|\__|___/_/\_\/_/\_\/_/\_\
 //                                                                                          
-export interface FinsStatementsItem
+export type FinsStatementsItem =
 {
 	DisclosedDate: string;
 	DisclosedTime: string;
@@ -540,13 +545,13 @@ export interface FinsStatementsItem
 	NextYearForecastNonConsolidatedOrdinaryProfit: string;
 	NextYearForecastNonConsolidatedProfit: string;
 	NextYearForecastNonConsolidatedEarningsPerShare: string;
-}
+};
 
-export interface FinsStatementsResponse
+export type FinsStatementsResponse =
 {
 	statements: FinsStatementsItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   _____ _           _____    ____       _        _ _    __  ____  ____  __
@@ -555,7 +560,7 @@ export interface FinsStatementsResponse
 //  |  _| | | | | \__ \  _|\__ \ |_| |  __/ || (_| | | \__ \/  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/_|  |___/____/ \___|\__\__,_|_|_|___/_/\_\/_/\_\/_/\_\
 //                                                                           
-export interface FinsFsDetailsFinancialStatement
+export type FinsFsDetailsFinancialStatement =
 {
 	"Goodwill (IFRS)"?: string;
 	"Retained earnings (IFRS)"?: string;
@@ -626,9 +631,9 @@ export interface FinsFsDetailsFinancialStatement
 	"Other non-current liabilities - NCL (IFRS)"?: string;
 	"Other income (IFRS)"?: string;
 	"Treasury shares (IFRS)"?: string;
-}
+};
 
-export interface FinsFsDetailsItem
+export type FinsFsDetailsItem =
 {
 	DisclosedDate: string;
 	DisclosedTime: string;
@@ -636,13 +641,13 @@ export interface FinsFsDetailsItem
 	DisclosureNumber: string;
 	TypeOfDocument: string;
 	FinancialStatement: FinsFsDetailsFinancialStatement
-}
+};
 
-export interface FinsFsDetailsResponse
+export type FinsFsDetailsResponse =
 {
 	fs_details: FinsFsDetailsItem[];
 	pagination_key?: string;
-}
+};
 
 //   _____ _           ____  _       _     _                ___  ____  ____  __
 //  |  ___(_)_ __  ___|  _ \(_)_   _(_) __| | ___ _ __   __| \ \/ /\ \/ /\ \/ /
@@ -651,7 +656,7 @@ export interface FinsFsDetailsResponse
 //  |_|   |_|_| |_|___/____/|_| \_/ |_|\__,_|\___|_| |_|\__,_/_/\_\/_/\_\/_/\_\
 //                                                                             
 
-export interface FinsDividendItem
+export type FinsDividendItem =
 {
 	AnnouncementDate: string;
 	AnnouncementTime: string;
@@ -676,13 +681,13 @@ export interface FinsDividendItem
 	CommemorativeSpecialCode: string;
 	CommemorativeDividendRate: string | number;
 	SpecialDividendRate: string | number;
-}
+};
 
-export interface FinsDividendResponse
+export type FinsDividendResponse =
 {
 	dividend: FinsDividendItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   _____ _              _                                                                _  __  ____  ____  __
@@ -691,7 +696,7 @@ export interface FinsDividendResponse
 //  |  _| | | | | \__ \/ ___ \| | | | | | | (_) | |_| | | | | (_|  __/ | | | | |  __/ | | | |_ /  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/_/   \_\_| |_|_| |_|\___/ \__,_|_| |_|\___\___|_| |_| |_|\___|_| |_|\__/_/\_\/_/\_\/_/\_\
 //                                                                                                              
-export interface FinsAnnouncementItem
+export type FinsAnnouncementItem =
 {
 	Date: string;
 	Code: string;
@@ -700,14 +705,13 @@ export interface FinsAnnouncementItem
 	SectorName: string;
 	FiscalQuarter: string;
 	Section: string;
-}
+};
 
-export interface FinsAnnouncementResponse
+export type FinsAnnouncementResponse =
 {
 	announcement: FinsAnnouncementItem[];
 	pagination_key?: string;
-
-}
+};
 
 
 //    ___        _   _             ___           _            ___        _   _            __  ____  ____  __
@@ -717,7 +721,7 @@ export interface FinsAnnouncementResponse
 //   \___/| .__/ \__|_|\___/|_| |_|___|_| |_|\__,_|\___/_/\_\\___/| .__/ \__|_|\___/|_| |_/_/\_\/_/\_\/_/\_\
 //        |_|                                                     |_|                                       
 
-export interface OptionIndexOptionItem
+export type OptionIndexOptionItem =
 {
 	Date: string;
 	Code: string;
@@ -749,13 +753,13 @@ export interface OptionIndexOptionItem
 	UnderlyingPrice?: number;
 	ImpliedVolatility?: number;
 	InterestRate?: number;
-}
+};
 
-export interface OptionIndexOptionResponse
+export type OptionIndexOptionResponse =
 {
 	index_option: OptionIndexOptionItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   ____            _            _   _                _____      _                      __  ____  ____  __
@@ -765,7 +769,7 @@ export interface OptionIndexOptionResponse
 //  |____/ \___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/_|   \__,_|\__|\__,_|_|  \___||___/_/\_\/_/\_\/_/\_\
 //                                                                                                         
 
-export interface DerivativesFuturesItem
+export type DerivativesFuturesItem =
 {
 	Code: string;
 	DerivativesProductCategory: string;
@@ -796,13 +800,13 @@ export interface DerivativesFuturesItem
 	SpecialQuotationDay: string;
 	SettlementPrice: number;
 	CentralContractMonthFlag: string;
-}
+};
 
-export interface DerivativesFuturesResponse
+export type DerivativesFuturesResponse =
 {
 	futures: DerivativesFuturesItem[];
 	pagination_key?: string;
-}
+};
 
 
 //   ____            _            _   _                 ___        _   _                __  ____  ____  __
@@ -812,7 +816,7 @@ export interface DerivativesFuturesResponse
 //  |____/ \___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/\___/| .__/ \__|_|\___/|_| |_|___/_/\_\/_/\_\/_/\_\
 //                                                          |_|                                           
 
-export interface DerivativesOptionsItem
+export type DerivativesOptionsItem =
 {
 	Code: string;
 	DerivativesProductCategory: string;
@@ -851,10 +855,10 @@ export interface DerivativesOptionsItem
 	ImpliedVolatility: number;
 	InterestRate: number;
 	CentralContractMonthFlag: string;
-}
+};
 
-export interface DerivativesOptionsResponse
+export type DerivativesOptionsResponse =
 {
 	options: DerivativesOptionsItem[];
 	pagination_key?: string;
-}
+};

@@ -89,7 +89,7 @@ export class YAMLAPITokenStore extends APITokenStore
 	}
 
 	
-	async get_refresh_token_info(): Promise<TOKEN_RECORD | undefined>
+	async getRefreshTokenInfo(): Promise<TOKEN_RECORD | undefined>
 	{
 		const content = this._read_token_store();
 		
@@ -105,7 +105,7 @@ export class YAMLAPITokenStore extends APITokenStore
 	}
 
 
-	async set_refresh_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>
+	async setRefreshTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>
 	{
 		const content = this._read_token_store();
 		let yaml_data = content === undefined ? {} : yaml.parse( content );
@@ -124,7 +124,7 @@ export class YAMLAPITokenStore extends APITokenStore
 	}
 
 
-	async get_id_token_info(): Promise<TOKEN_RECORD | undefined>
+	async getIdTokenInfo(): Promise<TOKEN_RECORD | undefined>
 	{
 		const content = this._read_token_store();
 		
@@ -140,7 +140,7 @@ export class YAMLAPITokenStore extends APITokenStore
 	}
 
 
-	async set_id_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>
+	async setIdTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>
 	{
 		const content = this._read_token_store();
 		let yaml_data = content === undefined ? {} : yaml.parse( content );

@@ -568,7 +568,7 @@ export default class JQuantsAPIHandler
 				expiration: dayjs().add( this.refreshTokenTTL,'second')
 			};
 
-			await this._tokenStore.set_refresh_token_info( tokenRec );
+			await this._tokenStore.setRefreshTokenInfo( tokenRec );
 			this._refreshTokenRecord = tokenRec;
 
 			return DUResult.success<TOKEN_RECORD>( tokenRec );
@@ -610,7 +610,7 @@ export default class JQuantsAPIHandler
 		const queue:(()=>Promise<boolean>)[] = [
 			async () =>
 			{
-				this._refreshTokenRecord	= await this._tokenStore.get_refresh_token_info();
+				this._refreshTokenRecord	= await this._tokenStore.getRefreshTokenInfo();
 				return true;// 読み出せなかった場合、次のタスクで WebAPI からリフレッシュトークンを取得するので、ここでは true を返す
 			},
 			async () =>
@@ -692,7 +692,7 @@ export default class JQuantsAPIHandler
 				expiration: dayjs().add( this.idTokenTTL ,'second')
 			};
 			
-			await this._tokenStore.set_id_token_info( tokenRec );
+			await this._tokenStore.setIdTokenInfo( tokenRec );
 			this._idTokenRecord = tokenRec;
 			return DUResult.success<TOKEN_RECORD>( tokenRec );
 		}
@@ -735,7 +735,7 @@ export default class JQuantsAPIHandler
 			async () =>
 			{
 				// トークンストアから ID トークンを読み出す
-				this._idTokenRecord = await this._tokenStore.get_id_token_info();
+				this._idTokenRecord = await this._tokenStore.getIdTokenInfo();
 				return true;	// 読み出せたかどうかにかかわらず breakCondition() で評価されるので必ず true を返す
 			},
 			async () =>

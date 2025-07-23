@@ -9,10 +9,10 @@ export type TOKEN_RECORD =
 
 export abstract class APITokenStore
 {
-	abstract get_refresh_token_info(): Promise<TOKEN_RECORD | undefined>;
-	abstract set_refresh_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>;
-	abstract get_id_token_info(): Promise<TOKEN_RECORD | undefined>;
-	abstract set_id_token_info({token,expiration}:TOKEN_RECORD): Promise<boolean>;
+	abstract getRefreshTokenInfo(): Promise<TOKEN_RECORD | undefined>;
+	abstract setRefreshTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>;
+	abstract getIdTokenInfo(): Promise<TOKEN_RECORD | undefined>;
+	abstract setIdTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>;
 }
 
 export abstract class JQCredentialStore

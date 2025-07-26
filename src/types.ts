@@ -21,27 +21,6 @@ export abstract class JQCredentialStore
 	abstract password(): Promise<string>;
 }
 
-export type TokenSet = {
-	idToken: string;
-	refreshToken: string;
-};
-
-export function isTokenSet( obj: unknown ): obj is TokenSet
-{
-	if( ! obj || typeof obj !== 'object' )
-	{
-		return false;
-	}
-
-	const tokenSet = obj as TokenSet;
-	return (
-		Object.prototype.hasOwnProperty.call( tokenSet, 'idToken' ) &&
-		Object.prototype.hasOwnProperty.call( tokenSet, 'refreshToken' ) &&
-		typeof tokenSet.idToken === 'string' &&
-		typeof tokenSet.refreshToken === 'string'
-	);
-}
-
 
 export interface Logger_T
 {

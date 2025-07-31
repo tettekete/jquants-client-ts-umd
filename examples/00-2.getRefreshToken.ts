@@ -27,12 +27,12 @@ $ ts-node 00-2.getRefreshToken.ts
 */
 
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC ,{ isTokenSet } from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC ,{ isTokenSet } from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
 
 const jqc = new JQC(
 	{

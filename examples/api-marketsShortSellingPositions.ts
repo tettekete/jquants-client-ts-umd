@@ -22,29 +22,31 @@ $ ts-node api-marketsShortSelling.ts
 
 */
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
 import dayjs from 'dayjs';
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
-	tokenStore: new YAMLAPITokenStore()
+	tokenStore: new YAMLAPITokenStore(),
+	// logLevel: 'trace'
 });
 
 (async ()=>{
 
 	const r = await jqc.marketsShortSellingPositions(
 		{
-			code: '7203',
-			disclosed_date_from: dayjs().subtract(7,'day' ),
-			disclosed_date_to: dayjs()
+			code: '1358',
+			disclosed_date: '2025-07-04',
+			// disclosed_date_from: dayjs().subtract(3,'month' ),
+			// disclosed_date_to: dayjs()
 		}
 	);
 

@@ -7,14 +7,15 @@ import pino from 'pino';
 
 import { InMemoryTokenStore } from './lib/defaultStores/InMemoryTokenStore';
 import { DotEnvCredentialStore  } from './lib/defaultStores/DotEnvCredentialStore';
+import { APITokenStore ,JQCredentialStore } from './lib/abstract-classes';
+export * from './lib/abstract-classes';
 import {
-	APITokenStore,
 	TOKEN_RECORD,
 	Logger_T,
-	JQCredentialStore,
+	APIUnavailableResponse,
 	ListedInfoResponse,
-	PriceDailyQuotesResponse,
-	PricePricesAmResponse,
+	PricesDailyQuotesResponse,
+	PricesPricesAmResponse,
 	MarketsTradesSpecResponse,
 	MarketsWeeklyMarginInterestResponse,
 	MarketsShortSellingResponse,
@@ -37,8 +38,8 @@ import {
 	isTokenAuthUserResponse,
 	isTokenAuthRefreshResponse,
 	isListedInfoResponse,
-	isPriceDailyQuotesResponse,
-	isPricePricesAmResponse,
+	isPricesDailyQuotesResponse,
+	isPricesPricesAmResponse,
 	isMarketsTradesSpecResponse,
 	isMarketsWeeklyMarginInterestResponse,
 	isMarketsShortSellingResponse,
@@ -63,39 +64,53 @@ type API_CONFIG_T =
 };
 
 // 投資部門別情報 - 市場名
+/**
+ * 投資部門別情報(/markets/trades_spec) の section パラメータに使用可能な市場名のユニオン型定義です。
+ *
+ * @typedef {INVESTMENT_CATEGORY_T}
+ * @category Web API コール用リテラルユニオン型
+ */
 export type INVESTMENT_CATEGORY_T = 'TSE1st' | 'TSE2nd' | 'TSEMothers' | 'TSEJASDAQ' | 'TSEPrime' | 'TSEStandard' | 'TSEGrowth' | 'TokyoNagoya';
 
-/* 取引カレンダー - 休日区分
-|項目|値|
-|---|---|
-|非営業日				|0|
-|営業日					|1|
-|東証半日立会日			|2|
-|非営業日(祝日取引あり)	|3|
-*/
+/**
+ * 取引カレンダー(/markets/trading_calendar) の `holidaydivision” パラメータに使用可能な休日区分のユニオン型定義です
+ *
+ * 取引カレンダー - 休日区分
+ * |項目|値|
+ * |---|---|
+ * |非営業日				|`0`|
+ * |営業日					|`1`|
+ * |東証半日立会日			|`2`|
+ * |非営業日(祝日取引あり)	|`3`|
+ * @typedef {HOLIDAY_DIVISION_T}
+ * @category Web API コール用リテラルユニオン型
+ */
 export type HOLIDAY_DIVISION_T = 0 | 1 | 2 | 3;
 
 
-/* 先物四本値 - 先物商品区分コード
-
-API: /derivatives/futures
-
-|コード|商品区分名称|データ収録期間|
-|---|---|---|
-|TOPIXF|TOPIX先物|2008/5/7〜|
-|TOPIXMF|ミニTOPIX先物|2008/6/16〜|
-|MOTF|マザーズ先物|2016/7/19〜|
-|NKVIF|日経平均VI先物|2012/2/27〜|
-|NKYDF|日経平均・配当指数先物|2010/7/26〜|
-|NK225F|日経225先物|2008/5/7〜|
-|NK225MF|日経225mini先物|2008/5/7〜|
-|JN400F|JPX日経インデックス400先物|2014/11/25〜|
-|REITF|東証REIT指数先物|2008/6/16〜|
-|DJIAF|NYダウ先物|2012/5/28〜|
-|JGBLF|長期国債先物|2008/5/7〜|
-|NK225MCF|日経225マイクロ先物|2023/5/29〜|
-|TOA3MF|TONA3ヶ月金利先物|2023/5/29〜|
-*/
+/**
+ * 先物四本値(/derivatives/futures) の category パラメータに指定可能な文字列のユニオン型定義です。
+ *
+ * 先物四本値 - 先物商品区分コード
+ * 
+ * | コード        | 商品区分名称           | データ収録期間     |
+ * | ---------- | ---------------- | ----------- |
+ * | `TOPIXF`   | TOPIX先物          | 2008/5/7〜   |
+ * | `TOPIXMF`  | ミニTOPIX先物        | 2008/6/16〜  |
+ * | `MOTF`     | マザーズ先物           | 2016/7/19〜  |
+ * | `NKVIF`    | 日経平均VI先物         | 2012/2/27〜  |
+ * | `NKYDF`    | 日経平均・配当指数先物      | 2010/7/26〜  |
+ * | `NK225F`   | 日経225先物          | 2008/5/7〜   |
+ * | `NK225MF`  | 日経225mini先物      | 2008/5/7〜   |
+ * | `JN400F`   | JPX日経インデックス400先物 | 2014/11/25〜 |
+ * | `REITF`    | 東証REIT指数先物       | 2008/6/16〜  |
+ * | `DJIAF`    | NYダウ先物           | 2012/5/28〜  |
+ * | `JGBLF`    | 長期国債先物           | 2008/5/7〜   |
+ * | `NK225MCF` | 日経225マイクロ先物      | 2023/5/29〜  |
+ * | `TOA3MF`   | TONA3ヶ月金利先物      | 2023/5/29〜  |
+ * @typedef {DERIVATIVES_FUTURES_CAT_T}
+ * @category Web API コール用リテラルユニオン型
+ */
 export type DERIVATIVES_FUTURES_CAT_T	= 'TOPIXF'
 										| 'TOPIXMF'
 										| 'MOTF'
@@ -112,17 +127,20 @@ export type DERIVATIVES_FUTURES_CAT_T	= 'TOPIXF'
 										;
 
 
-/* オプション四本値 - オプション商品区分コード
-API: /derivatives/options
-
-|商品区分コード|商品区分名称|データ収録期間|
-|---|---|---|
-|TOPIXE|TOPIXオプション|2008/5/7〜|
-|NK225E|日経225オプション|2008/5/7〜|
-|JGBLFE|長期国債先物オプション|2008/5/7〜|
-|EQOP|有価証券オプション|2014/11/17〜|
-|NK225MWE|日経225miniオプション|2023/5/29〜|
-*/
+/**
+ * オプション四本値 - オプション商品区分コード
+ * API: /derivatives/options
+ *
+ * |商品区分コード|商品区分名称|データ収録期間|
+ * |---|---|---|
+ * |TOPIXE|TOPIXオプション|2008/5/7〜|
+ * |NK225E|日経225オプション|2008/5/7〜|
+ * |JGBLFE|長期国債先物オプション|2008/5/7〜|
+ * |EQOP|有価証券オプション|2014/11/17〜|
+ * |NK225MWE|日経225miniオプション|2023/5/29〜|
+ * @typedef {DERIVATIVES_OPTIONS_CAT_T}
+ * @category Web API コール用リテラルユニオン型
+ */
 export type DERIVATIVES_OPTIONS_CAT_T	= 'TOPIXE'
 										| 'NK225E'
 										| 'JGBLFE'
@@ -130,8 +148,135 @@ export type DERIVATIVES_OPTIONS_CAT_T	= 'TOPIXE'
 										| 'NK225MWE'
 										;
 
-const kRefreshTokenTTL	= 7 * 24 * 3600;
-const kIdTokenTTL		= 24 * 3600;
+/**
+ * 33業種コードリテラルユニオン型定義
+ * 各業種のコードを示す文字列型。\n具体的な業種は水産・農林業からサービス業まで多岐にわたる。\nそれぞれの業種に対応する4桁のコードが割り当てられている。
+ *
+ * 詳細は下記リンクを参照
+ * - [“33業種コード及び業種名 | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/listed_info/sector33code)
+ *
+ * @typedef {SECTOR33CODE_T}
+ * @category Web API コール用リテラルユニオン型
+ */
+export type SECTOR33CODE_T =
+	| '0050' // 水産・農林業
+	| '1050' // 鉱業
+	| '2050' // 建設業
+	| '3050' // 食料品
+	| '3100' // 繊維製品
+	| '3150' // パルプ・紙
+	| '3200' // 化学
+	| '3250' // 医薬品
+	| '3300' // 石油･石炭製品
+	| '3350' // ゴム製品
+	| '3400' // ガラス･土石製品
+	| '3450' // 鉄鋼
+	| '3500' // 非鉄金属
+	| '3550' // 金属製品
+	| '3600' // 機械
+	| '3650' // 電気機器
+	| '3700' // 輸送用機器
+	| '3750' // 精密機器
+	| '3800' // その他製品
+	| '4050' // 電気･ガス業
+	| '5050' // 陸運業
+	| '5100' // 海運業
+	| '5150' // 空運業
+	| '5200' // 倉庫･運輸関連業
+	| '5250' // 情報･通信業
+	| '6050' // 卸売業
+	| '6100' // 小売業
+	| '7050' // 銀行業
+	| '7100' // 証券･商品先物取引業
+	| '7150' // 保険業
+	| '7200' // その他金融業
+	| '8050' // 不動産業
+	| '9050' // サービス業
+	| '9999' // その他
+	;
+
+export type INDICES_CODE_T =
+	| '0000'	// TOPIX	2008/5/7〜
+	| '0001'	// 東証二部総合指数	2008/5/7〜2022/4/1
+	| '0028'	// TOPIX Core30	2008/5/7〜
+	| '0029'	// TOPIX Large 70	2008/5/7〜
+	| '002A'	// TOPIX 100	2008/5/7〜
+	| '002B'	// TOPIX Mid400	2008/5/7〜
+	| '002C'	// TOPIX 500	2008/5/7〜
+	| '002D'	// TOPIX Small	2008/5/7〜
+	| '002E'	// TOPIX 1000	2008/5/7〜
+	| '002F'	// TOPIX Small500	（四本値）2018/10/9〜（終値のみ）2018/9/3〜
+	| '0040'	// 東証業種別 水産・農林業	2008/5/7〜
+	| '0041'	// 東証業種別 鉱業	2008/5/7〜
+	| '0042'	// 東証業種別 建設業	2008/5/7〜
+	| '0043'	// 東証業種別 食料品	2008/5/7〜
+	| '0044'	// 東証業種別 繊維製品	2008/5/7〜
+	| '0045'	// 東証業種別 パルプ・紙	2008/5/7〜
+	| '0046'	// 東証業種別 化学	2008/5/7〜
+	| '0047'	// 東証業種別 医薬品	2008/5/7〜
+	| '0048'	// 東証業種別 石油・石炭製品​	2008/5/7〜
+	| '0049'	// 東証業種別 ゴム製品	2008/5/7〜
+	| '004A'	// 東証業種別 ガラス・土石製品	2008/5/7〜
+	| '004B'	// 東証業種別 鉄鋼	2008/5/7〜
+	| '004C'	// 東証業種別 非鉄金属	2008/5/7〜
+	| '004D'	// 東証業種別 金属製品	2008/5/7〜
+	| '004E'	// 東証業種別 機械	2008/5/7〜
+	| '004F'	// 東証業種別 電気機器	2008/5/7〜
+	| '0050'	// 東証業種別 輸送用機器	2008/5/7〜
+	| '0051'	// 東証業種別 精密機器	2008/5/7〜
+	| '0052'	// 東証業種別 その他製品	2008/5/7〜
+	| '0053'	// 東証業種別 電気・ガス業	2008/5/7〜
+	| '0054'	// 東証業種別 陸運業	2008/5/7〜
+	| '0055'	// 東証業種別 海運業	2008/5/7〜
+	| '0056'	// 東証業種別 空運業	2008/5/7〜
+	| '0057'	// 東証業種別 倉庫・運輸関連業​	2008/5/7〜
+	| '0058'	// 東証業種別 情報・通信業	2008/5/7〜
+	| '0059'	// 東証業種別 卸売業	2008/5/7〜
+	| '005A'	// 東証業種別 小売業	2008/5/7〜
+	| '005B'	// 東証業種別 銀行業	2008/5/7〜
+	| '005C'	// 東証業種別 証券・商品先物取引業	2008/5/7〜
+	| '005D'	// 東証業種別 保険業	2008/5/7〜
+	| '005E'	// 東証業種別 その他金融業	2008/5/7〜
+	| '005F'	// 東証業種別 不動産業	2008/5/7〜
+	| '0060'	// 東証業種別 サービス業	2008/5/7〜
+	| '0070'	// 東証グロース市場250指数	(旧：東証マザーズ指数※)	2008/5/7〜
+	| '0075'	// REIT	2008/5/7〜
+	| '0080'	// TOPIX-17 食品	2009/2/2〜
+	| '0081'	// TOPIX-17 エネルギー資源	2009/2/2〜
+	| '0082'	// TOPIX-17 建設・資材	2009/2/2〜
+	| '0083'	// TOPIX-17 素材・化学	2009/2/2〜
+	| '0084'	// TOPIX-17 医薬品	2009/2/2〜
+	| '0085'	// TOPIX-17 自動車・輸送機	2009/2/2〜
+	| '0086'	// TOPIX-17 鉄鋼・非鉄​	2009/2/2〜
+	| '0087'	// TOPIX-17 機械	2009/2/2〜
+	| '0088'	// TOPIX-17 電機・精密	2009/2/2〜
+	| '0089'	// TOPIX-17 情報通信・サービスその他	2009/2/2〜
+	| '008A'	// TOPIX-17 電力・ガス	2009/2/2〜
+	| '008B'	// TOPIX-17 運輸・物流	2009/2/2〜
+	| '008C'	// TOPIX-17 商社・卸売	2009/2/2〜
+	| '008D'	// TOPIX-17 小売	2009/2/2〜
+	| '008E'	// TOPIX-17 銀行	2009/2/2〜
+	| '008F'	// TOPIX-17 金融（除く銀行）	2009/2/2〜
+	| '0090'	// TOPIX-17 不動産	2009/2/2〜
+	| '0091'	// JASDAQ INDEX	2008/5/7〜2022/4/1
+	| '0500'	// 東証プライム市場指数	2022/6/27〜
+	| '0501'	// 東証スタンダード市場指数	2022/6/27〜
+	| '0502'	// 東証グロース市場指数	2022/6/27〜
+	| '0503'	// JPXプライム150指数	（四本値）2023/7/3〜（終値のみ）2023/5/29〜
+	| '8100'	// TOPIX バリュー	2009/2/9〜
+	| '812C'	// TOPIX500 バリュー	2009/2/9〜
+	| '812D'	// TOPIXSmall バリュー	2009/2/9〜
+	| '8200'	// TOPIX グロース	2009/2/9〜
+	| '822C'	// TOPIX500 グロース	2009/2/9〜
+	| '822D'	// TOPIXSmall グロース	2009/2/9〜
+	| '8501'	// 東証REIT オフィス指数	（四本値）2010/3/8〜（終値のみ）2010/3/1〜
+	| '8502'	// 東証REIT 住宅指数	（四本値）2010/3/8〜（終値のみ）2010/3/1〜
+	| '8503'	// 東証REIT 商業・物流等指数	（四本値）2010/3/8〜（終値のみ）2010/3/1〜
+;
+
+
+const kRefreshTokenTTL	= 7 * 24 * 3600;	/** リフレッシュトークンの有効期限 */
+const kIdTokenTTL		= 24 * 3600;		/** IDトークンの有効期限 */
 
 function isValidToken(tokenRecord: TOKEN_RECORD | undefined): boolean
 {
@@ -145,7 +290,16 @@ function isValidToken(tokenRecord: TOKEN_RECORD | undefined): boolean
 }
 
 
-export default class JQuantsAPIHandler
+
+
+/**
+ * メインクラス
+ *
+ * @class JQuantsAPIClient
+ * @typedef {JQuantsAPIClient}
+ * @category メインクラス
+ */
+export class JQuantsAPIClient
 {
 	logger: Logger_T;
 	private _refreshTokenRecord	: TOKEN_RECORD | undefined;
@@ -200,6 +354,11 @@ export default class JQuantsAPIHandler
 		markets_short_selling:
 		{
 			path: 'markets/short_selling',
+			method: 'GET'
+		},
+		markets_short_selling_positions:
+		{
+			path: 'markets/short_selling_positions',
 			method: 'GET'
 		},
 		markets_breakdown:
@@ -353,38 +512,40 @@ export default class JQuantsAPIHandler
 	// API URLs getter
 	// - - - - - - - - - - - - - - - - - - - -
 
-	get refreshApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'refresh_api' ) }
-	get idTokenApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'id_token_api' ) }
-	get listedInfoApiUrl()	{ return JQuantsAPIHandler._api_url_maker( 'listed_info' ) }
+	get refreshApiUrl()		{ return JQuantsAPIClient._api_url_maker( 'refresh_api' ) }
+	get idTokenApiUrl()		{ return JQuantsAPIClient._api_url_maker( 'id_token_api' ) }
+	get listedInfoApiUrl()	{ return JQuantsAPIClient._api_url_maker( 'listed_info' ) }
 	get pricesDailyQuotesApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'prices_daily_quotes' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'prices_daily_quotes' ) }
 	get pricesPricesAmApiUrl()
-							{ return  JQuantsAPIHandler._api_url_maker( 'prices_prices_am' ) }
+							{ return  JQuantsAPIClient._api_url_maker( 'prices_prices_am' ) }
 	get marketsTradesSpecApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'markets_trades_spec' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'markets_trades_spec' ) }
 	get marketsWeeklyMarginInterestApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'markets_weekly_margin_interest' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'markets_weekly_margin_interest' ) }
 	get marketsShortSellingApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'markets_short_selling' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'markets_short_selling' ) }
+	get marketsShortSellingPositionsApiUrl()
+							{ return JQuantsAPIClient._api_url_maker( 'markets_short_selling_positions' ) }
 	get marketsBreakdownApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'markets_breakdown' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'markets_breakdown' ) }
 	get marketsTradingCalendarApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'markets_trading_calendar' ) }
-	get indicesApiUrl()		{ return JQuantsAPIHandler._api_url_maker( 'indices' ) }
-	get indicesTopixApiUrl(){ return JQuantsAPIHandler._api_url_maker( 'indices_topix' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'markets_trading_calendar' ) }
+	get indicesApiUrl()		{ return JQuantsAPIClient._api_url_maker( 'indices' ) }
+	get indicesTopixApiUrl(){ return JQuantsAPIClient._api_url_maker( 'indices_topix' ) }
 	get finsStatementsApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'fins_statements' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'fins_statements' ) }
 	get finsFsDetailsApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'fins_fs_details' ) }
-	get finsDividendApiUrl(){ return JQuantsAPIHandler._api_url_maker( 'fins_dividend' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'fins_fs_details' ) }
+	get finsDividendApiUrl(){ return JQuantsAPIClient._api_url_maker( 'fins_dividend' ) }
 	get finsAnnouncementApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'fins_announcement' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'fins_announcement' ) }
 	get optionIndexOptionApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'option_index_option' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'option_index_option' ) }
 	get derivativesFuturesApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'derivatives_futures' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'derivatives_futures' ) }
 	get derivativesOptionsApiUrl()
-							{ return JQuantsAPIHandler._api_url_maker( 'derivatives_options' ) }
+							{ return JQuantsAPIClient._api_url_maker( 'derivatives_options' ) }
 
 
 	
@@ -416,13 +577,13 @@ export default class JQuantsAPIHandler
 
 	private static _api_url_maker( url_for: string ): ExURL
 	{
-		if( ! Object.prototype.hasOwnProperty.call(JQuantsAPIHandler.URLs,  url_for ) )
+		if( ! Object.prototype.hasOwnProperty.call(JQuantsAPIClient.URLs,  url_for ) )
 		{
 			throw Error(`"${url_for}" is unknown api symbol`);
 		}
 
-		const baseURL: ExURL			= JQuantsAPIHandler.baseURL.clone();
-		const target: API_CONFIG_T	= JQuantsAPIHandler.URLs[url_for];
+		const baseURL: ExURL			= JQuantsAPIClient.baseURL.clone();
+		const target: API_CONFIG_T	= JQuantsAPIClient.URLs[url_for];
 
 		const api_url = baseURL.withPath( target.path );
 		api_url.method = target.method as HTTP_METHODS_T;
@@ -441,7 +602,7 @@ export default class JQuantsAPIHandler
 	//  |_|  \___|\__, |\__,_|\___||___/\__|___\_/\_/ |_|\__|_| |_|___\__,_/_/\_\_|\___/|___/
 	//               |_|                  |_____|                |_____|                     
 	// - - - - - - - - - - - - - - - - - - - -
-	async request_with_axios(
+	private async request_with_axios(
 		req: AxiosRequestConfig
 	): Promise<
 		DUResultT<AxiosResponse , AxiosError | unknown>
@@ -476,7 +637,7 @@ export default class JQuantsAPIHandler
 		return result;
 	}
 	
-	async _request_with_auth_header(
+	private async _request_with_auth_header(
 		{
 			url,
 			params
@@ -530,8 +691,7 @@ export default class JQuantsAPIHandler
 	 * 取得したトークンは this._tokenStore を通してトークンストアに保存される、また
 	 * 同レコードは this._refreshTokenRecord にもキャッシュとして格納される。
 	 * 
-	 * @param param0 
-	 * @returns 
+	 * @returns {Promise<DUResultT<TOKEN_RECORD ,AxiosError | unknown>>}
 	 */
 	async getRefreshTokenResult(): Promise<DUResultT<TOKEN_RECORD ,AxiosError | unknown>>
 	{
@@ -597,7 +757,6 @@ export default class JQuantsAPIHandler
 	 * それらが無効である場合 getRefreshTokenResult() をコールし Web API からリフレッシュトークンを
 	 * 取得します。
 	 *
-	 * @async
 	 * @returns {Promise<string | undefined>} 
 	 */
 	async getRefreshToken(): Promise<string | undefined>
@@ -644,7 +803,6 @@ export default class JQuantsAPIHandler
 	 * 取得したトークンは this._tokenStore を通してトークンストアに保存される、また
 	 * 同レコードは this._idTokenRecord にもキャッシュして格納される。
 	 *
-	 * @async
 	 * @param {{
 	 * 		refresh_token?:		string | undefined;
 	 * 	}} [param0={}] 
@@ -720,7 +878,6 @@ export default class JQuantsAPIHandler
 	 * それらが無効である場合 getIDTokenResult() をコールし Web API から ID トークンを
 	 * 取得します。
 	 *
-	 * @async
 	 * @returns {Promise<string | undefined>} 
 	 */
 	async getIdToken(): Promise<string | undefined>
@@ -781,11 +938,11 @@ export default class JQuantsAPIHandler
 			}
 			else if( ! r.data )
 			{
-				return DUResult.failure('Invalid error: .data property is falsy.');
+				return DUResult.failure(`Invalid error: .data property is falsy at ${methodOrAPIName}.`);
 			}
 			else
 			{
-				return DUResult.failure(`Type guard error: .data type is not ${typeName}.`);
+				return DUResult.failure(`Type guard error: .data type is not ${typeName} at ${methodOrAPIName}.`);
 			}
 		}
 		else
@@ -801,6 +958,17 @@ export default class JQuantsAPIHandler
 	//  | | \__ \ ||  __/ (_| || || | | |  _| (_) |
 	//  |_|_|___/\__\___|\__,_|___|_| |_|_|  \___/ 
 	//                                             
+	/**
+	 * 上場銘柄一覧(/listed/info)をコールします。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [上場銘柄一覧(/listed/info) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/listed_info)
+	 *
+	 * @param {Object} [param0={}]
+	 * @param {string} [param0.code] - 銘柄コード
+	 * @param {string | Date | Dayjs} [param0.date] - 日付
+	 * @returns {Promise<DUResultT<ListedInfoResponse,AxiosError | unknown>>}
+	 */
 	async listedInfo({code , date}:{code?: string, date?: string | Date | Dayjs } = {})
 		:Promise<DUResultT<ListedInfoResponse,AxiosError | unknown>>
 	{
@@ -815,7 +983,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<ListedInfoResponse>(
+		return JQuantsAPIClient._makeAPIResult<ListedInfoResponse>(
 			r,
 			isListedInfoResponse,
 			'ListedInfoResponse',
@@ -831,6 +999,32 @@ export default class JQuantsAPIHandler
 	//  | |_) | |  | | (_|  __/\__ \ |_| | (_| | | | |_| | |_| | |_| | (_) | ||  __/\__ \
 	//  | .__/|_|  |_|\___\___||___/____/ \__,_|_|_|\__, |\__\_\\__,_|\___/ \__\___||___/
 	//  |_|                                         |___/                                
+	/**
+	 * 株価四本値(/prices/daily_quotes)をコールします。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [株価四本値(/prices/daily_quotes) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/daily_quotes)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `date` と `from`/`to` を同時に指定してもエラーとはならず `date` を元に検索が行われる
+	 * - `from`/`to` は必ずしも両方を指定する必要は無い
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?:	string | Date | Dayjs;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			pagination_key?:	string
+	 * 		}} param0 - リクエストパラメータ
+	 * @param {string} param0.code - 銘柄コード
+	 * @param {*} param0.from - 開始日付
+	 * @param {*} param0.to - 終了日付
+	 * @param {*} param0.date - 日付
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<PricesDailyQuotesResponse ,AxiosError | unknown>>} 
+	 */
 	async pricesDailyQuotes(
 		{
 			code,
@@ -846,22 +1040,12 @@ export default class JQuantsAPIHandler
 			date?:	string | Date | Dayjs;
 			pagination_key?:	string
 		}
-	): Promise<DUResultT<PriceDailyQuotesResponse ,AxiosError | unknown>>
+	): Promise<DUResultT<PricesDailyQuotesResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
-		if( (! code && ! date) || ( code && date ) )
+		if( ! code && ! date )
 		{
 			return DUResult.failure('pricesDailyQuotes() requires either "code" or "date", but not both.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('pricesDailyQuotes() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('In pricesDailyQuotes(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -878,9 +1062,9 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<PriceDailyQuotesResponse>(
+		return JQuantsAPIClient._makeAPIResult<PricesDailyQuotesResponse>(
 			r,
-			isPriceDailyQuotesResponse,
+			isPricesDailyQuotesResponse,
 			'PriceDailyQuoteItem',
 			'pricesDailyQuotes()'
 		);
@@ -895,19 +1079,24 @@ export default class JQuantsAPIHandler
 	//  | .__/|_|  |_|\___\___||___/_|   |_|  |_|\___\___||___/_/   \_\_| |_| |_|
 	//  |_|                                                                      
 	/**
-	 * Fetches the prices for the AM session using the JQuants API.
-	 * 
-	 * pagination_key is an argument for pagination, and if it was included in
-	 * the previous search results, it is a parameter for obtaining the continuation.
-	 * 
-	 * NOTE: To use this feature, you must subscribe to the Premium Plan.
+	 * 前場四本値(/prices/prices_am) をコールします。要プレミアムプラン
 	 *
-	 * @async
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [“前場四本値(/prices/prices_am) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/prices_am) を参照してください。
+	 * 
+	 * 注意点:
+	 *
+	 * 本 API は取得できない時間帯があります。その場合 API はステータスコード 210 を返しますが、
+	 * データ構造は本来のデータ構造と異なり、実質的にエラーであるため、本モジュールでは
+	 * `DUResult.failure<APIUnavailableResponse>()` を返します。
+	 *
+	 * また、前場終了直後数十分程度の間も取得できない場合があります。
+	 *
 	 * @function pricesPricesAm
 	 * @param {Object} params - The parameters for the request.
 	 * @param {string} [params.code] - The stock code to filter the results (optional).
 	 * @param {string} [params.pagination_key] - The pagination key for retrieving the next set of results (optional).
-	 * @returns {Promise<DUResultT<PricePricesAmResponse ,AxiosError | unknown>>} - A promise that resolves to the result of the API call.
+	 * @returns {Promise<DUResultT<PricesPricesAmResponse ,AxiosError | APIUnavailableResponse | unknown>>} - A promise that resolves to the result of the API call.
 	 */
 	async pricesPricesAm({
 		code,
@@ -916,7 +1105,7 @@ export default class JQuantsAPIHandler
 	:{
 		code?: string;
 		pagination_key?: string
-	}): Promise<DUResultT<PricePricesAmResponse ,AxiosError | unknown>>
+	}): Promise<DUResultT<PricesPricesAmResponse ,AxiosError | APIUnavailableResponse | unknown>>
 	{
 		const params:{code?: string, pagination_key?: string } = {};
 		if( code )				{ params['code'] = code }
@@ -929,10 +1118,18 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<PricePricesAmResponse>(
+		if( r.ok && r.data.status === 210 )
+		{
+			return DUResult.failure<APIUnavailableResponse>(
+				`Status code 210: Unavailable during retrieval time or stock code does not exist`,
+				r.data.data
+			);
+		}
+
+		return JQuantsAPIClient._makeAPIResult<PricesPricesAmResponse>(
 			r,
-			isPricePricesAmResponse,
-			'PricePricesAmResponse',
+			isPricesPricesAmResponse,
+			'PricesPricesAmResponse',
 			'pricesPricesAm()'
 		);
 	}
@@ -944,6 +1141,23 @@ export default class JQuantsAPIHandler
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| |  __/\__ \___) | |_) |  __/ (__ 
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|\___||___/____/| .__/ \___|\___|
 	//                                                                            |_|              
+	/**
+	 * 投資部門別情報(/markets/trades_spec)をコールします。ライトプラン以上
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * 
+	 * - [“投資部門別情報(/markets/trades_spec) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/trades_spec)
+	 *
+	 * @param {{
+	 * 			section?: INVESTMENT_CATEGORY_T;
+	 * 			from?: string | Date | Dayjs;
+	 * 			to?: string | Date | Dayjs;
+	 * 		}} [param0={}] 
+	 * @param {INVESTMENT_CATEGORY_T} param0.section 
+	 * @param {*} param0.from 
+	 * @param {*} param0.to 
+	 * @returns {Promise<DUResultT<MarketsTradesSpecResponse , AxiosError | unknown >>} 
+	 */
 	async marketsTradesSpec(
 		{
 			section,
@@ -970,7 +1184,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 		
-		return JQuantsAPIHandler._makeAPIResult<MarketsTradesSpecResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsTradesSpecResponse>(
 			r,
 			isMarketsTradesSpecResponse,
 			'MarketsTradesSpecResponse',
@@ -985,6 +1199,33 @@ export default class JQuantsAPIHandler
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \\ V  V /  __/  __/   <| | |_| | |  | | (_| | | | (_| | | | | || || | | | ||  __/ | |  __/\__ \ |_ 
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/ \_/\_/ \___|\___|_|\_\_|\__, |_|  |_|\__,_|_|  \__, |_|_| |_|___|_| |_|\__\___|_|  \___||___/\__|
 	//                                                                  |___/                  |___/                                             
+	/**
+	/**
+	 * 信用取引週末残高(/markets/weekly_margin_interest)。要スタンダードプラン。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [“信用取引週末残高(/markets/weekly_margin_interest) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/weekly_margin_interest)
+	 * 
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `code` と `date` を同時に指定するパターンが掲載されていないが、特に問題なく両方を同時に指定出来る
+	 * - `date` と `from`/`to` を同時に指定してもエラーとはならず `date` を元に検索が行われる
+	 * - `from`/`to` は必ずしも両方を指定する必要は無く、片方のみを指定した場合でも期待通りの結果が得られる
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - API リクエストパラメータ
+	 * @param {string} param0.code - マーケットコード
+	 * @param {*} param0.date - 参照日
+	 * @param {*} param0.from - 開始日
+	 * @param {*} param0.to - 終了日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<MarketsWeeklyMarginInterestResponse ,AxiosError | unknown>>} 週次マージン金利を取得する非同期関数です。
+	 */
 	async marketsWeeklyMarginInterest(
 		{
 			code,
@@ -1003,24 +1244,9 @@ export default class JQuantsAPIHandler
 	): Promise<DUResultT<MarketsWeeklyMarginInterestResponse ,AxiosError | unknown>>
 	{
 		// arg pattern validation
-		if( (! code && ! date) || ( code && date ) )
+		if( ! code && ! date )
 		{
 			return DUResult.failure('marketsWeeklyMarginInterest() requires either "code" or "date", but not both.');
-		}
-
-		if( code && (! from || ! to) )
-		{
-			return DUResult.failure('When specifying "code" in marketsWeeklyMarginInterest(), "from" and "to" are required.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('marketsWeeklyMarginInterest() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('If "from" or "to" is used, both must be defined in marketsWeeklyMarginInterest().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1037,7 +1263,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<MarketsWeeklyMarginInterestResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsWeeklyMarginInterestResponse>(
 			r,
 			isMarketsWeeklyMarginInterestResponse,
 			'MarketsWeeklyMarginInterestResponse',
@@ -1053,6 +1279,30 @@ export default class JQuantsAPIHandler
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |
 	//                                                                                           |___/ 
+	/**
+	 * 業種別空売り比率(/markets/short_selling)。要スタンダードプラン。
+	 * 
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `date` と `from`/`to` を同時に指定してもエラーとはならず `date` を元に検索が行われる
+	 * - `from` / `to` の片方のみを指定してもエラーにはならず、期待通りの結果が得られる
+	 *
+	 * @param {{
+	 * 			sector33code?: string;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?:	string | Date | Dayjs;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - API リクエストパラメータ
+	 * @param {string} param0.sector33code - セクター33コード
+	 * @param {*} param0.from - 開始日
+	 * @param {*} param0.to - 終了日
+	 * @param {*} param0.date - 特定日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<MarketsShortSellingResponse,AxiosError | unknown>>} 市場の短期売却情報を取得する非同期関数。
+	 */
 	async marketsShortSelling(
 		{
 			sector33code,
@@ -1062,7 +1312,7 @@ export default class JQuantsAPIHandler
 			pagination_key
 		}:
 		{
-			sector33code?: string;
+			sector33code?: SECTOR33CODE_T;
 			from?:	string | Date | Dayjs;
 			to?:	string | Date | Dayjs;
 			date?:	string | Date | Dayjs;
@@ -1070,19 +1320,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<MarketsShortSellingResponse,AxiosError | unknown>>
 	{
-		if( (! sector33code && ! date ) )
+		if( ! sector33code && ! date )
 		{
 			return DUResult.failure('marketsShortSelling() requires either "code" or "date", or both.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('marketsShortSelling() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('In marketsShortSelling(), if either "from" or "to" is specified, both are required.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1099,7 +1339,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<MarketsShortSellingResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsShortSellingResponse>(
 			r,
 			isMarketsShortSellingResponse,
 			'MarketsShortSellingResponse',
@@ -1113,7 +1353,33 @@ export default class JQuantsAPIHandler
 	//  | '_ ` _ \ / _` | '__| |/ / _ \ __/ __\___ \| '_ \ / _ \| '__| __\___ \ / _ \ | | | '_ \ / _` | |_) / _ \/ __| | __| |/ _ \| '_ \/ __|
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |  __/ (_) \__ \ | |_| | (_) | | | \__ \
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |_|   \___/|___/_|\__|_|\___/|_| |_|___/
-	//                                                                                           |___/                                                                                                                                 |___/                                                      |_|                         
+	//                                                                                           |___/                                        
+	/**
+	 * 空売り残高報告(/markets/short_selling_positions)。要スタンダードプラン。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [“空売り残高報告(/markets/short_selling_positions) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/short_selling_positions)
+	 * 
+	 * 公式ドキュメントのパラメータ組み合わせ制限と実際の挙動が一致していない事が多いため
+	 * 細かい入力バリデーションは廃止しました。
+	 * 代わりにエラーレスポンスデータの `message` などを参照してください。
+	 *
+	 * @param {{
+	 * 			code?: string;
+	 * 			disclosed_date?:	string | Date | Dayjs;
+	 * 			disclosed_date_from?:	string | Date | Dayjs;
+	 * 			disclosed_date_to?:	string | Date | Dayjs;
+	 * 			calculated_date?:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 売りポジションを取得するためのパラメータ
+	 * @param {string} param0.code 銘柄コード
+	 * @param {*} param0.disclosed_date 開示日
+	 * @param {*} param0.disclosed_date_from 開示開始日
+	 * @param {*} param0.disclosed_date_to 開示終了日
+	 * @param {*} param0.calculated_date 計算日
+	 * @param {string} param0.pagination_key ページネーションキー
+	 * @returns {Promise<DUResultT<MarketsShortSellingPositionsResponse,AxiosError | unknown>>} ショート・セリングポジションのマーケット情報を取得する非同期関数。
+	 */
 	async marketsShortSellingPositions(
 		{
 			code,
@@ -1133,36 +1399,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<MarketsShortSellingPositionsResponse,AxiosError | unknown>>
 	{
-		if( (! code && ! calculated_date ) )
+		if( (! code && ! disclosed_date && ! calculated_date ) )
 		{
-			return DUResult.failure('marketsShortSellingPositions() requires either "code" or "calculated_date", or both.');
-		}
-
-		let flag = 0b0000;
-		const disclosedDateFlag = 1 << 0;
-		const disclosedDateFromToFlag = 1 << 1;
-		const calculatedDateFlag = 1 << 2;
-		if( disclosed_date )							{ flag = flag | disclosedDateFlag }
-		if( disclosed_date_from || disclosed_date_to )	{ flag = flag | disclosedDateFromToFlag }
-		if( calculated_date )							{ flag = flag | calculatedDateFlag }
-
-		if( code )
-		{
-			if( flag & (flag -1 ) && flag !== 0 )
-			{
-				return DUResult.failure('When specifying "code" in marketsShortSellingPositions(), only one of "disclosed_date", "disclosed_date_from"/"disclosed_date_to" ,"calculated_date" can be specified.');
-			}
-		}
-		else
-		{
-			if( disclosed_date_from || disclosed_date_to )
-			{
-				return DUResult.failure('Cannot specify "disclosed_date_from"/"disclosed_date_to" when "code" is not specified in marketsShortSellingPositions().');
-			}
-			else if( disclosed_date && calculated_date )
-			{
-				return DUResult.failure('Cannot specify both "disclosed_date" and "calculated_date" when "code" is not specified in marketsShortSellingPositions().');
-			}
+			return DUResult.failure('marketsShortSellingPositions() requires either "code" or "disclosed_date" or "calculated_date", or both.');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1175,12 +1414,12 @@ export default class JQuantsAPIHandler
 
 		const r = await this._request_with_auth_header(
 			{
-				url: this.marketsShortSellingApiUrl,
+				url: this.marketsShortSellingPositionsApiUrl,
 				params: params
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<MarketsShortSellingPositionsResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsShortSellingPositionsResponse>(
 			r,
 			isMarketsShortSellingPositionsResponse,
 			'MarketsShortSellingPositionsResponse',
@@ -1196,6 +1435,34 @@ export default class JQuantsAPIHandler
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \ |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/____/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_|
 	//                                                                                            
+	/**
+	 * 売買内訳データ(/markets/breakdown)。要プレミアムプラン
+ 	 * 
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [“売買内訳データ(/markets/breakdown) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/breakdown)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `code` と `date` を同時に指定するパターンが掲載されていないが、特に問題なく両方を同時に指定出来る
+	 * - `date` と `from`/`to` を同時に指定してもエラーとはならず `date` を元に検索が行われる
+	 * - `from`/`to` は必ずしも両方を指定する必要は無く、片方のみを指定した場合でも期待通りの結果が得られる
+	 *
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?: 	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 市場の内訳を取得するパラメータ
+	 * @param {string} param0.code 市場コード
+	 * @param {*} param0.date 特定の日付
+	 * @param {*} param0.from 開始日
+	 * @param {*} param0.to 終了日
+	 * @param {string} param0.pagination_key ページネーションキー
+	 * @returns {Promise<DUResultT<MarketsBreakdownResponse ,AxiosError | unknown>>} 市場の詳細情報を取得する非同期関数。
+	 */
 	async marketsBreakdown(
 		{
 			code,
@@ -1213,19 +1480,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<MarketsBreakdownResponse ,AxiosError | unknown>>
 	{
-		if( (! code && ! date) || ( code && date ) )
+		if( ! code && ! date )
 		{
-			return DUResult.failure('marketsBreakdown() requires either "code" or "date", but not both.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('marketsBreakdown() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('If "from" or "to" is used, both must be defined in marketsBreakdown().');
+			return DUResult.failure('marketsBreakdown() requires either "code" or "date".');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1242,7 +1499,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<MarketsBreakdownResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsBreakdownResponse>(
 			r,
 			isMarketsBreakdownResponse,
 			'MarketsBreakdownResponse',
@@ -1257,6 +1514,28 @@ export default class JQuantsAPIHandler
 	//  | | | | | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| | | | | | (_| | |__| (_| | |  __/ | | | (_| | (_| | |   
 	//  |_| |_| |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|_|_| |_|\__, |\____\__,_|_|\___|_| |_|\__,_|\__,_|_|   
 	//                                                                     |___/                                          
+	
+	/**
+	 * 取引カレンダー(/markets/trading_calendar)をコールします。フリープランの場合条件付きで利用可
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [取引カレンダー(/markets/trading_calendar) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/trading_calendar)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - 他の API と異なり、`from`/`to` を使用する場合両方指定する必要がある。
+	 * - それ以外はドキュメント通り、パラメータ無し、`holidaydivision` のみ、`from`/`to` のみの指定が可能。
+	 *
+	 * @param {{
+	 * 			holidaydivision?: HOLIDAY_DIVISION_T;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?:	string | Date | Dayjs;
+	 * 		}} param0 
+	 * @param {HOLIDAY_DIVISION_T} param0.holidaydivision 
+	 * @param {*} param0.from 
+	 * @param {*} param0.to 
+	 * @returns {Promise<DUResultT<MarketsTradingCalendarResponse ,AxiosError | unknown>>} 
+	 */
 	async marketsTradingCalendar(
 		{
 			holidaydivision,
@@ -1292,7 +1571,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<MarketsTradingCalendarResponse>(
+		return JQuantsAPIClient._makeAPIResult<MarketsTradingCalendarResponse>(
 			r,
 			isMarketsTradingCalendarResponse,
 			'MarketsTradingCalendarResponse',
@@ -1308,6 +1587,33 @@ export default class JQuantsAPIHandler
 	//  | | | | | (_| | | (_|  __/\__ \
 	//  |_|_| |_|\__,_|_|\___\___||___/
 	//                                 
+	
+	/**
+	 * 指数四本値(/indices) をコールします。要スタンダードプラン
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [“指数四本値(/indices) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/indices)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `code` と `date` を同時に指定するパターンが掲載されていないが、特に問題なく両方を同時に指定出来る
+	 * - `date` と `from`/`to` を同時に指定してもエラーとはならず `date` を元に検索が行われる
+	 * - `from`/`to` は必ずしも両方を指定する必要は無く、片方のみを指定した場合でも期待通りの結果が得られる
+	 *
+	 * @param {{
+	 * 			code?:	INDICES_CODE_T;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?: 	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - API リクエストパラメータ
+	 * @param {INDICES_CODE_T} param0.code - インデックスコード
+	 * @param {*} param0.date - 日付
+	 * @param {*} param0.from - 開始日
+	 * @param {*} param0.to - 終了日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<IndicesResponse ,AxiosError | unknown>>} インデックスデータを非同期で取得します。
+	 */
 	async indices(
 		{
 			code,		// This is an index code, not a stock code. See https://jpx.gitbook.io/j-quants-ja/api-reference/indices/indexcodes
@@ -1317,7 +1623,7 @@ export default class JQuantsAPIHandler
 			pagination_key
 		}:
 		{
-			code?:	string;
+			code?:	INDICES_CODE_T;
 			date?:	string | Date | Dayjs;
 			from?:	string | Date | Dayjs;
 			to?: 	string | Date | Dayjs;
@@ -1325,19 +1631,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<IndicesResponse ,AxiosError | unknown>>
 	{
-		if( (! code && ! date) || ( code && date ) )
+		if( (! code && ! date) )
 		{
 			return DUResult.failure('indices() requires either "code" or "date", but not both.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('indices() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('If "from" or "to" is used, both must be defined in indices().');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1354,7 +1650,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<IndicesResponse>(
+		return JQuantsAPIClient._makeAPIResult<IndicesResponse>(
 			r,
 			isIndicesResponse,
 			'IndicesResponse',
@@ -1369,6 +1665,28 @@ export default class JQuantsAPIHandler
 	//  | | | | | (_| | | (_|  __/\__ \| | (_) | |_) | |>  < 
 	//  |_|_| |_|\__,_|_|\___\___||___/|_|\___/| .__/|_/_/\_\
 	//                                         |_|           
+	
+	/**
+	 * TOPIX指数四本値(/indices/topix) をコールします。要ライトプラン以上
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [“TOPIX指数四本値(/indices/topix) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/topix)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `from`/`to` は必ずしも両方を指定する必要は無く、片方のみを指定した場合でも期待通りの結果が得られる
+	 *
+	 * @param {{
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?: 	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 
+	 * @param {*} param0.from - 開始日
+	 * @param {*} param0.to - 終了日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<IndicesTopixResponse ,AxiosError | unknown>>} 
+	 */
 	async indicesTopix(
 		{
 			from,
@@ -1394,7 +1712,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 		
-		return JQuantsAPIHandler._makeAPIResult<IndicesTopixResponse>(
+		return JQuantsAPIClient._makeAPIResult<IndicesTopixResponse>(
 			r,
 			isIndicesTopixResponse,
 			'IndicesTopixResponse',
@@ -1410,6 +1728,23 @@ export default class JQuantsAPIHandler
 	//  |  _| | | | \__ \___) | || (_| | ||  __/ | | | | |  __/ | | | |_\__ \
 	//  |_| |_|_| |_|___/____/ \__\__,_|\__\___|_| |_| |_|\___|_| |_|\__|___/
 	//                                                                       
+	/**
+	 * 財務情報(/fins/statements)をコールします。フリープランの場合条件付きで利用可
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [財務情報(/fins/statements) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/statements)
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - API リクエストパラメータ
+	 * @param {string} param0.code - 銘柄コード
+	 * @param {*} param0.date - 参照日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<FinsStatementsResponse, AxiosError | unknown>>} 
+	 */
 	async finsStatements(
 		{
 			code,
@@ -1423,9 +1758,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<FinsStatementsResponse, AxiosError | unknown>>
 	{
-		if( (! code && ! date) || ( code && date ) )
+		if( ! code && ! date )
 		{
-			return DUResult.failure('finsStatements() requires either "code" or "date", but not both.');
+			return DUResult.failure('finsStatements() requires either "code" or "date".');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1440,7 +1775,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 		
-		return JQuantsAPIHandler._makeAPIResult<FinsStatementsResponse>(
+		return JQuantsAPIClient._makeAPIResult<FinsStatementsResponse>(
 			r,
 			isFinsStatementsResponse,
 			'FinsStatementsResponse',
@@ -1456,6 +1791,22 @@ export default class JQuantsAPIHandler
 	//  |  _| | | | \__ \  _|\__ \ |_| |  __/ || (_| | | \__ \
 	//  |_| |_|_| |_|___/_|  |___/____/ \___|\__\__,_|_|_|___/
 	//                                                        
+	/**
+	 * 財務諸表(BS/PL)(/fins/fs_details)をコールします。要プレミアムプラン
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [財務諸表(BS/PL)(/fins/fs_details) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/statements-1)
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 
+	 * @param {string} param0.code 
+	 * @param {*} param0.date 
+	 * @param {string} param0.pagination_key 
+	 * @returns {Promise<DUResultT<FinsFsDetailsResponse ,AxiosError | unknown>>} 
+	 */
 	async finsFsDetails(
 		{
 			code,
@@ -1469,9 +1820,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<FinsFsDetailsResponse ,AxiosError | unknown>>
 	{
-		if( (! code && ! date) || ( code && date ) )
+		if( (! code && ! date) )
 		{
-			return DUResult.failure('finsStatements() requires either "code" or "date", but not both.');
+			return DUResult.failure('finsFsDetails() requires either "code" or "date".');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1486,7 +1837,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<FinsFsDetailsResponse>(
+		return JQuantsAPIClient._makeAPIResult<FinsFsDetailsResponse>(
 			r,
 			isFinsFsDetailsResponse,
 			'FinsFsDetailsResponse',
@@ -1502,6 +1853,32 @@ export default class JQuantsAPIHandler
 	//  |  _| | | | \__ \ |_| | |\ V /| | (_| |  __/ | | | (_| |
 	//  |_| |_|_| |_|___/____/|_| \_/ |_|\__,_|\___|_| |_|\__,_|
 	//                                                          
+	/**
+	 * 配当金情報(/fins/dividend)をコールします。要プレミアムプラン
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [“配当金情報(/fins/dividend) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/dividend)
+	 *
+	 * 公式ドキュメントのパラメータ組み合わせ説明と実際の挙動について(2025-07-31時点):
+	 *
+	 * - `code` と `date` は同時に指定出来ないかのように書かれているが実際にはは出来る
+	 * - `from` と `to` はセットで指定する必要があるかのように書かれているが片方だけの指定も有効で、期待通りに動作する
+	 * - `date` と `from` / `to` を同時に指定してもエラーにはならず `date` が優先される 
+	 *
+	 * @param {{
+	 * 			code?:	string;
+	 * 			date?:	string | Date | Dayjs;
+	 * 			from?:	string | Date | Dayjs;
+	 * 			to?: 	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - 配当情報を取得するための引数オブジェクト
+	 * @param {string} param0.code - 証券コード
+	 * @param {*} param0.date - 特定の日付
+	 * @param {*} param0.from - 検索開始日
+	 * @param {*} param0.to - 検索終了日
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<FinsDividendResponse, AxiosError | unknown>>} 配当金データを取得する非同期関数。
+	 */
 	async finsDividend(
 		{
 			code,
@@ -1519,19 +1896,9 @@ export default class JQuantsAPIHandler
 		}
 	): Promise<DUResultT<FinsDividendResponse, AxiosError | unknown>>
 	{
-		if( (! code && ! date) || ( code && date ) )
+		if( ! code && ! date )
 		{
-			return DUResult.failure('finsDividend() requires either "code" or "date", but not both.');
-		}
-
-		if( date && (from || to ) )
-		{
-			return DUResult.failure('finsDividend() does not allow "date" and "from"/"to" to be specified at the same time.');
-		}
-
-		if( (from || to) && ( ! from || ! to ) )
-		{
-			return DUResult.failure('If "from" or "to" is used, both must be defined in finsDividend().');
+			return DUResult.failure('finsDividend() requires either "code" or "date".');
 		}
 
 		const params:{ [key in string]: string} = {};
@@ -1548,7 +1915,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<FinsDividendResponse>(
+		return JQuantsAPIClient._makeAPIResult<FinsDividendResponse>(
 			r,
 			isFinsDividendResponse,
 			'FinsDividendResponse',
@@ -1564,6 +1931,19 @@ export default class JQuantsAPIHandler
 	//  |  _| | | | \__ \/ ___ \| | | | | | | (_) | |_| | | | | (_|  __/ | | | | |  __/ | | | |_ 
 	//  |_| |_|_| |_|___/_/   \_\_| |_|_| |_|\___/ \__,_|_| |_|\___\___|_| |_| |_|\___|_| |_|\__|
 	//                                                                                           
+	
+	/**
+	 * 決算発表予定日(/fins/announcement)をコールします。フリープランの場合条件付きで利用可
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [決算発表予定日(/fins/announcement) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/announcement)
+	 *
+	 * @param {{
+	 * 			pagination_key?: string;
+	 * 		}} [param0={}] 
+	 * @param {string} param0.pagination_key 
+	 * @returns {Promise<DUResultT<FinsAnnouncementResponse ,AxiosError | unknown>>} 
+	 */
 	async finsAnnouncement(
 		{
 			pagination_key
@@ -1583,7 +1963,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 		
-		return JQuantsAPIHandler._makeAPIResult<FinsAnnouncementResponse>(
+		return JQuantsAPIClient._makeAPIResult<FinsAnnouncementResponse>(
 			r,
 			isFinsAnnouncementResponse,
 			'FinsAnnouncementResponse',
@@ -1599,6 +1979,21 @@ export default class JQuantsAPIHandler
 	//  | (_) | |_) | |_| | (_) | | | || || | | | (_| |  __/>  <| |_| | |_) | |_| | (_) | | | |
 	//   \___/| .__/ \__|_|\___/|_| |_|___|_| |_|\__,_|\___/_/\_\\___/| .__/ \__|_|\___/|_| |_|
 	//        |_|                                                     |_|                      
+	/**
+	 * 日経225オプション四本値(/option/index_option)をコールします。要スタンダードプラン。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [“日経225オプション四本値(/option/index_option) | J-Quants API”](https://jpx.gitbook.io/j-quants-ja/api-reference/index_option)
+	 *
+	 * @param {{
+	 * 			date:	string | Date | Dayjs;
+	 * 			pagination_key?: string;
+	 * 		}} param0 - API リクエストパラメータ
+	 * @param {string | Date | Dayjs} param0.date - 日付
+	 * @param {string} param0.pagination_key - ページネーションキー
+	 * @returns {Promise<DUResultT<OptionIndexOptionResponse ,AxiosError | unknown>>} インデックスオプションデータを非同期で取得します。
+	 */
 	async optionIndexOption(
 		{
 			date,
@@ -1625,7 +2020,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<OptionIndexOptionResponse>(
+		return JQuantsAPIClient._makeAPIResult<OptionIndexOptionResponse>(
 			r,
 			isOptionIndexOptionResponse,
 			'OptionIndexOptionResponse',
@@ -1641,6 +2036,26 @@ export default class JQuantsAPIHandler
 	//  | (_| |  __/ |  | |\ V / (_| | |_| |\ V /  __/\__ \  _|| |_| | |_| |_| | | |  __/\__ \
 	//   \__,_|\___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/_|   \__,_|\__|\__,_|_|  \___||___/
 	//                                                                                        
+	
+	/**
+	 * 先物四本値(/derivatives/futures)をコールします。要プレミアムプラン。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 *
+	 * - [先物四本値(/derivatives/futures) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/futures)
+	 *
+	 * @param {{
+	 * 			date:				string | Date | Dayjs;
+	 * 			category?:			DERIVATIVES_FUTURES_CAT_T;
+	 * 			contract_flag?:		string;
+	 * 			pagination_key?:	string;
+	 * 		}} param0 
+	 * @param {*} param0.date 
+	 * @param {DERIVATIVES_FUTURES_CAT_T} param0.category 
+	 * @param {string} param0.contract_flag 
+	 * @param {string} param0.pagination_key 
+	 * @returns {Promise<DUResultT<DerivativesFuturesResponse,AxiosError | unknown>>} 
+	 */
 	async derivativesFutures(
 		{
 			date,
@@ -1672,7 +2087,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 
-		return JQuantsAPIHandler._makeAPIResult<DerivativesFuturesResponse>(
+		return JQuantsAPIClient._makeAPIResult<DerivativesFuturesResponse>(
 			r,
 			isDerivativesFuturesResponse,
 			'DerivativesFuturesResponse',
@@ -1682,7 +2097,32 @@ export default class JQuantsAPIHandler
 
 
 	// API: /derivatives/options
-	// derivativesOptions
+	//       _           _            _   _                 ___        _   _                 
+	//    __| | ___ _ __(_)_   ____ _| |_(_)_   _____  ___ / _ \ _ __ | |_(_) ___  _ __  ___ 
+	//   / _` |/ _ \ '__| \ \ / / _` | __| \ \ / / _ \/ __| | | | '_ \| __| |/ _ \| '_ \/ __|
+	//  | (_| |  __/ |  | |\ V / (_| | |_| |\ V /  __/\__ \ |_| | |_) | |_| | (_) | | | \__ \
+	//   \__,_|\___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/\___/| .__/ \__|_|\___/|_| |_|___/
+	//                                                          |_|                          
+	/**
+	 * オプション四本値(/derivatives/options)をコールします。要プレミアムプラン。
+	 *
+	 * 詳細は公式ドキュメントを参照してください。
+	 * - [オプション四本値(/derivatives/options) | J-Quants API](https://jpx.gitbook.io/j-quants-ja/api-reference/options)
+	 *
+	 * @param {{
+	 * 			date:				string | Date | Dayjs;
+	 * 			category?:			DERIVATIVES_OPTIONS_CAT_T;
+	 * 			code?:				string;
+	 * 			contract_flag?:		string;
+	 * 			pagination_key?:	string;
+	 * 		}} param0 
+	 * @param {*} param0.date 
+	 * @param {DERIVATIVES_OPTIONS_CAT_T} param0.category 
+	 * @param {string} param0.code 
+	 * @param {string} param0.contract_flag 
+	 * @param {string} param0.pagination_key 
+	 * @returns {Promise<DUResultT<DerivativesOptionsResponse ,AxiosError | unknown>>} 
+	 */
 	async derivativesOptions(
 		{
 			date,
@@ -1723,7 +2163,7 @@ export default class JQuantsAPIHandler
 			}
 		);
 		
-		return JQuantsAPIHandler._makeAPIResult<DerivativesOptionsResponse>(
+		return JQuantsAPIClient._makeAPIResult<DerivativesOptionsResponse>(
 			r,
 			isDerivativesOptionsResponse,
 			'DerivativesOptionsResponse',
@@ -1737,7 +2177,7 @@ export default class JQuantsAPIHandler
 	// - - - - - - - - - - - - - - - - - - - -
 	/**
 	 * Convert the specified date to a string in the "YYYY-MM-DD" format
-	 * required by the J-QUANTS API.
+	 * required by the J-Quants API.
 	 * 
 	 * @param {string | Date | Dayjs} date - The input date to be converted. It can be:
 	 *  - A string representing a date that Dayjs can parse,
@@ -1750,7 +2190,7 @@ export default class JQuantsAPIHandler
 	 * @throws {Error} If the input is a string and does not represent a valid date, or if the input is neither
 	 * a string, `Date`, nor `Dayjs` object.
 	 */
-	toJQDate( date: string | Date | Dayjs ): string
+	private toJQDate( date: string | Date | Dayjs ): string
 	{
 		const date_format = 'YYYY-MM-DD';
 

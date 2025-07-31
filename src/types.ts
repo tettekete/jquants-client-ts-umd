@@ -1,27 +1,25 @@
 
 import {Dayjs} from "dayjs";
 
+/**
+ * トークンとその有効期限を格納するデータ型定義です。
+ *
+ * @typedef {TOKEN_RECORD}
+ * @category その他
+ */
 export type TOKEN_RECORD =
 {
 	token: string;
 	expiration: Dayjs;
 };
 
-export abstract class APITokenStore
-{
-	abstract getRefreshTokenInfo(): Promise<TOKEN_RECORD | undefined>;
-	abstract setRefreshTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>;
-	abstract getIdTokenInfo(): Promise<TOKEN_RECORD | undefined>;
-	abstract setIdTokenInfo({token,expiration}:TOKEN_RECORD): Promise<boolean>;
-}
-
-export abstract class JQCredentialStore
-{
-	abstract user(): Promise<string>;
-	abstract password(): Promise<string>;
-}
-
-
+/**
+ * ロガー用インターフェイス定義
+ *
+ * @interface Logger_T
+ * @typedef {Logger_T}
+ * @category その他
+ */
 export interface Logger_T
 {
   trace(message: string, ...args: unknown[]): void;
@@ -33,17 +31,42 @@ export interface Logger_T
 }
 
 // 200 https://api.jquants.com/v1/token/auth_user
+/**
+ * 認証 API が 200 OK を返した時、AxiosResponse の data プロパティー値の型定義
+ *
+ * @typedef {TokenAuthUserResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type TokenAuthUserResponse =
 {	
 	refreshToken: string;
 };
 
 // 200 https://api.jquants.com/v1/token/auth_refresh
+/**
+ * ID トークン取得 API が 200 OK を返した時、AxiosResponse の data プロパティー値の型定義
+ *
+ * @typedef {TokenAuthRefreshResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type TokenAuthRefreshResponse =
 {
 	idToken: string;	
 };
 
+
+/**
+ * APIが利用できない場合のレスポンスを表します。
+ * 
+ * pricesPricesAm などのAPIで、取得時間外や銘柄コードが存在しない場合に返されることがあります。
+ * その場合、レスポンスのステータスコードは 2xx 系だが利用不可能なため本来のデータ構造とは異なり、message プロパティーのみを持つオブジェクトが返されます。
+ *
+ * @typedef {APIUnavailableResponse}
+ */
+export type APIUnavailableResponse =
+{
+	message: string;
+}
 
 //   _     _     _           _ ___        __     __  ____  ____  __
 //  | |   (_)___| |_ ___  __| |_ _|_ __  / _| ___\ \/ /\ \/ /\ \/ /
@@ -51,6 +74,12 @@ export type TokenAuthRefreshResponse =
 //  | |___| \__ \ ||  __/ (_| || || | | |  _| (_) /  \  /  \  /  \ 
 //  |_____|_|___/\__\___|\__,_|___|_| |_|_|  \___/_/\_\/_/\_\/_/\_\
 //                                                                 
+/**
+ * 上場銘柄一覧(/listed/info)レスポンス `info` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {ListedInfoItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type ListedInfoItem =
 {
 	Date: string;
@@ -68,21 +97,32 @@ export type ListedInfoItem =
 	MarginCodeName: string;
 };
 
+
+/**
+ * 上場銘柄一覧(/listed/info)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {ListedInfoResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type ListedInfoResponse =
 {
 	info: ListedInfoItem[];
 };
 
 
-//   ____       _          ____        _ _        ___              _           __  ____  ____  __
-//  |  _ \ _ __(_) ___ ___|  _ \  __ _(_) |_   _ / _ \ _   _  ___ | |_ ___  ___\ \/ /\ \/ /\ \/ /
-//  | |_) | '__| |/ __/ _ \ | | |/ _` | | | | | | | | | | | |/ _ \| __/ _ \/ __|\  /  \  /  \  / 
-//  |  __/| |  | | (_|  __/ |_| | (_| | | | |_| | |_| | |_| | (_) | ||  __/\__ \/  \  /  \  /  \ 
-//  |_|   |_|  |_|\___\___|____/ \__,_|_|_|\__, |\__\_\\__,_|\___/ \__\___||___/_/\_\/_/\_\/_/\_\
-//                                         |___/                                                 
-
-// 株価四本値(/prices/daily_quotes)
-export type PriceDailyQuoteItem =
+//   ____       _               ____        _ _        ___              _           __  ____  ____  __
+//  |  _ \ _ __(_) ___ ___  ___|  _ \  __ _(_) |_   _ / _ \ _   _  ___ | |_ ___  ___\ \/ /\ \/ /\ \/ /
+//  | |_) | '__| |/ __/ _ \/ __| | | |/ _` | | | | | | | | | | | |/ _ \| __/ _ \/ __|\  /  \  /  \  / 
+//  |  __/| |  | | (_|  __/\__ \ |_| | (_| | | | |_| | |_| | |_| | (_) | ||  __/\__ \/  \  /  \  /  \ 
+//  |_|   |_|  |_|\___\___||___/____/ \__,_|_|_|\__, |\__\_\\__,_|\___/ \__\___||___/_/\_\/_/\_\/_/\_\
+//                                              |___/                                                 
+/**
+ * 株価四本値(/prices/daily_quotes)レスポンス `daily_quotes` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {PricesDailyQuotesItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
+export type PricesDailyQuotesItem =
 {
 	Date: string;
 	Code: string;
@@ -128,20 +168,33 @@ export type PriceDailyQuoteItem =
 	AfternoonAdjustmentVolume?: number;
 };
 
-export type PriceDailyQuotesResponse =
+
+/**
+ * 株価四本値(/prices/daily_quotes)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {PricesDailyQuotesResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
+export type PricesDailyQuotesResponse =
 {
-  daily_quotes: PriceDailyQuoteItem[];
+  daily_quotes: PricesDailyQuotesItem[];
   pagination_key?: string;
 };
 
 
-//   ____       _          ____       _                  _             __  ____  ____  __
-//  |  _ \ _ __(_) ___ ___|  _ \ _ __(_) ___ ___  ___   / \   _ __ ___ \ \/ /\ \/ /\ \/ /
-//  | |_) | '__| |/ __/ _ \ |_) | '__| |/ __/ _ \/ __| / _ \ | '_ ` _ \ \  /  \  /  \  / 
-//  |  __/| |  | | (_|  __/  __/| |  | | (_|  __/\__ \/ ___ \| | | | | |/  \  /  \  /  \ 
-//  |_|   |_|  |_|\___\___|_|   |_|  |_|\___\___||___/_/   \_\_| |_| |_/_/\_\/_/\_\/_/\_\
-//
-export type PricePricesAmItem =
+//   ____       _               ____       _                  _             __  ____  ____  __
+//  |  _ \ _ __(_) ___ ___  ___|  _ \ _ __(_) ___ ___  ___   / \   _ __ ___ \ \/ /\ \/ /\ \/ /
+//  | |_) | '__| |/ __/ _ \/ __| |_) | '__| |/ __/ _ \/ __| / _ \ | '_ ` _ \ \  /  \  /  \  / 
+//  |  __/| |  | | (_|  __/\__ \  __/| |  | | (_|  __/\__ \/ ___ \| | | | | |/  \  /  \  /  \ 
+//  |_|   |_|  |_|\___\___||___/_|   |_|  |_|\___\___||___/_/   \_\_| |_| |_/_/\_\/_/\_\/_/\_\
+//                                                                                            
+/**
+ * 前場四本値(/prices/prices_am)レスポンス `daily_quotes` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {PricesPricesAmItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
+export type PricesPricesAmItem =
 {
 	Date: string;
 	Code: string;
@@ -153,9 +206,16 @@ export type PricePricesAmItem =
 	MorningTurnoverValue: number;
 };
 
-export type PricePricesAmResponse =
+
+/**
+ * 前場四本値(/prices/prices_am)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {PricesPricesAmResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
+export type PricesPricesAmResponse =
 {
-  daily_quotes: PricePricesAmItem[];
+  daily_quotes: PricesPricesAmItem[];
   pagination_key?: string;
 };
 
@@ -166,6 +226,12 @@ export type PricePricesAmResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| |  __/\__ \___) | |_) |  __/ (__ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|\___||___/____/| .__/ \___|\___|
 //                                                                         |_|              
+/**
+ * 投資部門別情報(/markets/trades_spec)レスポンス `trades_spec` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsTradesSpecItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsTradesSpecItem =
 {
 	PublishedDate: string;
@@ -226,6 +292,13 @@ export type MarketsTradesSpecItem =
 	OtherFinancialInstitutionsBalance: number;
 };
 
+
+/**
+ * 投資部門別情報(/markets/trades_spec)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsTradesSpecResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsTradesSpecResponse =
 {
 	trades_spec: MarketsTradesSpecItem[];
@@ -239,6 +312,12 @@ export type MarketsTradesSpecResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \\ V  V /  __/  __/   <| | |_| | |  | | (_| | | | (_| | | | | || || | | | ||  __/ | |  __/\__ \ |_ /  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/ \_/\_/ \___|\___|_|\_\_|\__, |_|  |_|\__,_|_|  \__, |_|_| |_|___|_| |_|\__\___|_|  \___||___/\__/_/\_\/_/\_\/_/\_\
 //                                                               |___/                  |___/                                                              
+/**
+ * 信用取引週末残高(/markets/weekly_margin_interest)レスポンス `weekly_margin_interest` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsWeeklyMarginInterestItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsWeeklyMarginInterestItem =
 {
 	Date: string;
@@ -253,6 +332,12 @@ export type MarketsWeeklyMarginInterestItem =
 };
 
 
+/**
+ * 信用取引週末残高(/markets/weekly_margin_interest)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsWeeklyMarginInterestResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type  MarketsWeeklyMarginInterestResponse =
 {
 	weekly_margin_interest: MarketsWeeklyMarginInterestItem[];
@@ -266,6 +351,12 @@ export type  MarketsWeeklyMarginInterestResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |/  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, /_/\_\/_/\_\/_/\_\
 //                                                                                        |___/                  
+/**
+ * 業種別空売り比率(/markets/short_selling)レスポンス `short_selling` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsShortSellingItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsShortSellingItem =
 {
 	Date: string;
@@ -275,6 +366,13 @@ export type MarketsShortSellingItem =
 	ShortSellingWithoutRestrictionsTurnoverValue: number
 };
 
+
+/**
+ * 業種別空売り比率(/markets/short_selling)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsShortSellingResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsShortSellingResponse =
 {
 	short_selling: MarketsShortSellingItem[];
@@ -288,7 +386,12 @@ export type MarketsShortSellingResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \___) | | | | (_) | |  | |_ ___) |  __/ | | | | | | (_| |  __/ (_) \__ \ | |_| | (_) | | | \__ \/  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_| |_|\___/|_|   \__|____/ \___|_|_|_|_| |_|\__, |_|   \___/|___/_|\__|_|\___/|_| |_|___/_/\_\/_/\_\/_/\_\
 //                                                                                        |___/                                                         
-
+/**
+ * 空売り残高報告(/markets/short_selling_positions)レスポンス `short_selling_positions` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsShortSellingPositionsItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsShortSellingPositionsItem =
 {
 	DisclosedDate: string;
@@ -307,6 +410,13 @@ export type MarketsShortSellingPositionsItem =
 	Notes: string;
 };
 
+
+/**
+ * 空売り残高報告(/markets/short_selling_positions)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsShortSellingPositionsResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsShortSellingPositionsResponse =
 {
 	short_selling_positions: MarketsShortSellingPositionsItem[];
@@ -319,6 +429,12 @@ export type MarketsShortSellingPositionsResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \ |_) | | |  __/ (_| |   < (_| | (_) \ V  V /| | | |/  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/____/|_|  \___|\__,_|_|\_\__,_|\___/ \_/\_/ |_| |_/_/\_\/_/\_\/_/\_\
 //                                                                                                          
+/**
+ * 売買内訳データ(/markets/breakdown)レスポンス `breakdown` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsBreakdownItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsBreakdownItem =
 {
 	Date: string; 
@@ -339,6 +455,13 @@ export type MarketsBreakdownItem =
 	MarginBuyCloseVolume: number;
 };
 
+
+/**
+ * 売買内訳データ(/markets/breakdown)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsBreakdownResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsBreakdownResponse =
 {
 	breakdown: MarketsBreakdownItem[];
@@ -352,12 +475,25 @@ export type MarketsBreakdownResponse =
 //  | |  | | (_| | |  |   <  __/ |_\__ \| || | | (_| | (_| | | | | | (_| | |__| (_| | |  __/ | | | (_| | (_| | |  /  \  /  \  /  \ 
 //  |_|  |_|\__,_|_|  |_|\_\___|\__|___/|_||_|  \__,_|\__,_|_|_| |_|\__, |\____\__,_|_|\___|_| |_|\__,_|\__,_|_| /_/\_\/_/\_\/_/\_\
 //                                                                  |___/                                                          
+/**
+ * 取引カレンダー(/markets/trading_calendar)レスポンス `trading_calendar` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {MarketsTradingCalendarItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsTradingCalendarItem =
 {
 	Date: string;
     HolidayDivision: string;
 };
 
+
+/**
+ * 取引カレンダー(/markets/trading_calendar)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {MarketsTradingCalendarResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type MarketsTradingCalendarResponse =
 {
 	trading_calendar: MarketsTradingCalendarItem[];
@@ -369,7 +505,12 @@ export type MarketsTradingCalendarResponse =
 //   | || | | | (_| | | (_|  __/\__ \/  \  /  \  /  \ 
 //  |___|_| |_|\__,_|_|\___\___||___/_/\_\/_/\_\/_/\_\
 //                                                    
-
+/**
+ * 指数四本値(/indices)レスポンス `indices` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {IndicesItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type IndicesItem =
 {
 	Date: string;
@@ -380,6 +521,13 @@ export type IndicesItem =
 	Close: number;
 };
 
+
+/**
+ * 指数四本値(/indices)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {IndicesResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type IndicesResponse =
 {
 	indices: IndicesItem[];
@@ -393,6 +541,12 @@ export type IndicesResponse =
 //   | || | | | (_| | | (_|  __/\__ \| | (_) | |_) | |>  <  /  \  /  \  /  \ 
 //  |___|_| |_|\__,_|_|\___\___||___/|_|\___/| .__/|_/_/\_\/_/\_\/_/\_\/_/\_\
 //                                           |_|                             
+/**
+ * TOPIX指数四本値(/indices/topix)レスポンス `topix` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {IndicesTopixItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type IndicesTopixItem =
 {
 	Date: string;
@@ -402,6 +556,13 @@ export type IndicesTopixItem =
 	Close: number;
 };
 
+
+/**
+ * TOPIX指数四本値(/indices/topix)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {IndicesTopixResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type IndicesTopixResponse =
 {
 	topix: IndicesTopixItem[];
@@ -415,6 +576,12 @@ export type IndicesTopixResponse =
 //  |  _| | | | | \__ \___) | || (_| | ||  __/ | | | | |  __/ | | | |_\__ \/  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/____/ \__\__,_|\__\___|_| |_| |_|\___|_| |_|\__|___/_/\_\/_/\_\/_/\_\
 //                                                                                          
+/**
+ * 財務情報(/fins/statements)レスポンス `statements` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {FinsStatementsItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsStatementsItem =
 {
 	DisclosedDate: string;
@@ -526,6 +693,13 @@ export type FinsStatementsItem =
 	NextYearForecastNonConsolidatedEarningsPerShare: string;
 };
 
+
+/**
+ * 財務情報(/fins/statements)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {FinsStatementsResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsStatementsResponse =
 {
 	statements: FinsStatementsItem[];
@@ -539,6 +713,14 @@ export type FinsStatementsResponse =
 //  |  _| | | | | \__ \  _|\__ \ |_| |  __/ || (_| | | \__ \/  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/_|  |___/____/ \___|\__\__,_|_|_|___/_/\_\/_/\_\/_/\_\
 //                                                                           
+/**
+ * 財務諸表(BS/PL)(/fins/fs_details)レスポンス `fs_details[].FinancialStatement` プロパティーに格納されるオブジェクトの型定義です。
+ *
+ * `FinancialStatement` のデータについては公式サイトの解説を参照してください。
+ *
+ * @typedef {FinsFsDetailsFinancialStatement}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsFsDetailsFinancialStatement =
 {
 	"Goodwill (IFRS)"?: string;
@@ -612,6 +794,13 @@ export type FinsFsDetailsFinancialStatement =
 	"Treasury shares (IFRS)"?: string;
 };
 
+
+/**
+ * 財務諸表(BS/PL)(/fins/fs_details)レスポンス `fs_details` プロパティーに格納される要素オブジェクトの型定義です。
+ *
+ * @typedef {FinsFsDetailsItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsFsDetailsItem =
 {
 	DisclosedDate: string;
@@ -622,6 +811,13 @@ export type FinsFsDetailsItem =
 	FinancialStatement: FinsFsDetailsFinancialStatement
 };
 
+
+/**
+ * 財務諸表(BS/PL)(/fins/fs_details)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {FinsFsDetailsResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsFsDetailsResponse =
 {
 	fs_details: FinsFsDetailsItem[];
@@ -634,7 +830,13 @@ export type FinsFsDetailsResponse =
 //  |  _| | | | | \__ \ |_| | |\ V /| | (_| |  __/ | | | (_| |/  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/____/|_| \_/ |_|\__,_|\___|_| |_|\__,_/_/\_\/_/\_\/_/\_\
 //                                                                             
-
+/**
+ * 配当金情報(/fins/dividend)レスポンス `dividend` プロパティーに格納される
+ * 要素オブジェクトの型定義です。
+ *
+ * @typedef {FinsDividendItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsDividendItem =
 {
 	AnnouncementDate: string;
@@ -662,6 +864,13 @@ export type FinsDividendItem =
 	SpecialDividendRate: string | number;
 };
 
+
+/**
+ * 配当金情報(/fins/dividend)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {FinsDividendResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsDividendResponse =
 {
 	dividend: FinsDividendItem[];
@@ -675,6 +884,13 @@ export type FinsDividendResponse =
 //  |  _| | | | | \__ \/ ___ \| | | | | | | (_) | |_| | | | | (_|  __/ | | | | |  __/ | | | |_ /  \  /  \  /  \ 
 //  |_|   |_|_| |_|___/_/   \_\_| |_|_| |_|\___/ \__,_|_| |_|\___\___|_| |_| |_|\___|_| |_|\__/_/\_\/_/\_\/_/\_\
 //                                                                                                              
+/**
+ * 決算発表予定日(/fins/announcement)レスポンス `announcement` プロパティーに格納される
+ * 要素オブジェクトの型定義です。
+ *
+ * @typedef {FinsAnnouncementItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsAnnouncementItem =
 {
 	Date: string;
@@ -686,6 +902,13 @@ export type FinsAnnouncementItem =
 	Section: string;
 };
 
+
+/**
+ * 決算発表予定日(/fins/announcement)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {FinsAnnouncementResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type FinsAnnouncementResponse =
 {
 	announcement: FinsAnnouncementItem[];
@@ -699,7 +922,13 @@ export type FinsAnnouncementResponse =
 //  | |_| | |_) | |_| | (_) | | | || || | | | (_| |  __/>  <| |_| | |_) | |_| | (_) | | | |/  \  /  \  /  \ 
 //   \___/| .__/ \__|_|\___/|_| |_|___|_| |_|\__,_|\___/_/\_\\___/| .__/ \__|_|\___/|_| |_/_/\_\/_/\_\/_/\_\
 //        |_|                                                     |_|                                       
-
+/**
+ * 日経225オプション四本値(/option/index_option)レスポンス `index_option` プロパティーに格納される
+ * 要素オブジェクトの型定義です。
+ *
+ * @typedef {OptionIndexOptionItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type OptionIndexOptionItem =
 {
 	Date: string;
@@ -734,6 +963,13 @@ export type OptionIndexOptionItem =
 	InterestRate?: number;
 };
 
+
+/**
+ * 日経225オプション四本値(/option/index_option)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {OptionIndexOptionResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type OptionIndexOptionResponse =
 {
 	index_option: OptionIndexOptionItem[];
@@ -747,7 +983,13 @@ export type OptionIndexOptionResponse =
 //  | |_| |  __/ |  | |\ V / (_| | |_| |\ V /  __/\__ \  _|| |_| | |_| |_| | | |  __/\__ \/  \  /  \  /  \ 
 //  |____/ \___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/_|   \__,_|\__|\__,_|_|  \___||___/_/\_\/_/\_\/_/\_\
 //                                                                                                         
-
+/**
+ * 先物四本値(/derivatives/futures)レスポンス `futures` プロパティーに格納される
+ * 要素オブジェクトの型定義です。
+ *
+ * @typedef {DerivativesFuturesItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type DerivativesFuturesItem =
 {
 	Code: string;
@@ -781,6 +1023,13 @@ export type DerivativesFuturesItem =
 	CentralContractMonthFlag: string;
 };
 
+
+/**
+ * 先物四本値(/derivatives/futures)の成功時レスポンスデータ構造の型定義です
+ *
+ * @typedef {DerivativesFuturesResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type DerivativesFuturesResponse =
 {
 	futures: DerivativesFuturesItem[];
@@ -794,7 +1043,13 @@ export type DerivativesFuturesResponse =
 //  | |_| |  __/ |  | |\ V / (_| | |_| |\ V /  __/\__ \ |_| | |_) | |_| | (_) | | | \__ \/  \  /  \  /  \ 
 //  |____/ \___|_|  |_| \_/ \__,_|\__|_| \_/ \___||___/\___/| .__/ \__|_|\___/|_| |_|___/_/\_\/_/\_\/_/\_\
 //                                                          |_|                                           
-
+/**
+ * オプション四本値(/derivatives/options)レスポンス `options` プロパティーに格納される
+ * 要素オブジェクトの型定義です。
+ *
+ * @typedef {DerivativesOptionsItem}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type DerivativesOptionsItem =
 {
 	Code: string;
@@ -836,6 +1091,13 @@ export type DerivativesOptionsItem =
 	CentralContractMonthFlag: string;
 };
 
+
+/**
+ * オプション四本値(/derivatives/options)の成功時レスポンスデータ構造の型定義です。
+ *
+ * @typedef {DerivativesOptionsResponse}
+ * @category J-Quants API レスポンス向け型定義
+ */
 export type DerivativesOptionsResponse =
 {
 	options: DerivativesOptionsItem[];

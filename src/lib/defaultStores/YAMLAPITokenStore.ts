@@ -3,9 +3,17 @@ import path from 'path';
 import yaml from 'yaml';
 import dayjs from 'dayjs';
 
-import {APITokenStore ,TOKEN_RECORD } from '../../types';
+import { APITokenStore } from '../abstract-classes';
+import { TOKEN_RECORD } from '../../types';
 
-
+/**
+ * YAML 形式の API トークンを保存するストレージクラスの実装です。トークン情報の提供と保存を行います。
+ *
+ * @class YAMLAPITokenStore
+ * @typedef {YAMLAPITokenStore}
+ * @extends {APITokenStore}
+ * @category デフォルト提供のトークンストア
+ */
 export class YAMLAPITokenStore extends APITokenStore
 {
 	private _YAML_FILE =  path.join( process.cwd(), "tokens-db.yaml" );

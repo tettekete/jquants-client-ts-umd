@@ -24,19 +24,19 @@ $ ts-node api-marketsWeeklyMarginInterest.ts
 
 import dayjs from 'dayjs';
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
 	tokenStore: new YAMLAPITokenStore(),
-	logLevel: 'trace'
+	// logLevel: 'trace'
 });
 
 (async ()=>{
@@ -44,8 +44,9 @@ const jqc = new JQC({
 	let r = await jqc.marketsWeeklyMarginInterest(
 		{
 			code: '7203',
-			from: dayjs().subtract( 3, 'month'),
-			to: dayjs()
+			// from: dayjs().subtract( 3, 'month'),
+			// to: dayjs()
+			date: '2025-07-25'
 		}
 	);
 

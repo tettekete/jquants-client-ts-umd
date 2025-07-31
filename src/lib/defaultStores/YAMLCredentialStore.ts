@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import yaml from 'yaml';
 
-import { JQCredentialStore } from '../../types';
+import { JQCredentialStore } from '../abstract-classes';
 
 export class YAMLCredentialStore extends JQCredentialStore
 {

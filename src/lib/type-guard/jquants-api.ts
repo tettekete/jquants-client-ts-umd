@@ -3,8 +3,8 @@ import type {
 	TokenAuthUserResponse,
 	TokenAuthRefreshResponse,
 	ListedInfoResponse,
-	PriceDailyQuotesResponse,
-	PricePricesAmResponse,
+	PricesDailyQuotesResponse,
+	PricesPricesAmResponse,
 	MarketsTradesSpecResponse,
 	MarketsWeeklyMarginInterestResponse,
 	MarketsShortSellingResponse,
@@ -31,7 +31,7 @@ type KVTypeValidatorT =
 	required: boolean;
 };
 
-export function KVTypeValidator(data: unknown, defines: readonly KVTypeValidatorT[]): boolean
+function KVTypeValidator(data: unknown, defines: readonly KVTypeValidatorT[]): boolean
 {
 	if( typeof data !== 'object' || data === null )
 	{
@@ -91,6 +91,14 @@ export function KVTypeValidator(data: unknown, defines: readonly KVTypeValidator
 }
 
 
+
+/**
+ * `data` が {@link TokenAuthUserResponse} 型であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @returns {data is TokenAuthUserResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isTokenAuthUserResponse(data: unknown): data is TokenAuthUserResponse
 {
 	if( typeof data === 'object' 
@@ -105,6 +113,15 @@ export function isTokenAuthUserResponse(data: unknown): data is TokenAuthUserRes
 	return false;
 }
 
+
+
+/**
+ * `data` が {@link TokenAuthRefreshResponse} 型であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @returns {data is TokenAuthRefreshResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isTokenAuthRefreshResponse(data: unknown): data is TokenAuthRefreshResponse
 {
 	if( typeof data === 'object' 
@@ -121,21 +138,22 @@ export function isTokenAuthRefreshResponse(data: unknown): data is TokenAuthRefr
 
 // 上場銘柄一覧(/listed/info)
 /**
- * 上場銘柄一覧レスポンスの型ガード
+ * `data` が {@link ListedInfoResponse} 型（上場銘柄一覧(/listed/info)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data - 対象のデータ
+ * @param {unknown} data - 評価対象データ
  * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、info に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
  * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
  * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is ListedInfoResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isListedInfoResponse(data: unknown ,sampleSize = 0 ): data is ListedInfoResponse
 {
+	const rootKey = 'info';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'info' in data )
-		|| ! Array.isArray( data.info )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -162,10 +180,10 @@ export function isListedInfoResponse(data: unknown ,sampleSize = 0 ): data is Li
 	{
 		if( sampleSize > 0 )
 		{
-			return data.info.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.info;
+		return data[rootKey];
 	})();
 
 	return verifyList.every( item => KVTypeValidator( item ,listedInfoItemSpecs) );
@@ -174,21 +192,22 @@ export function isListedInfoResponse(data: unknown ,sampleSize = 0 ): data is Li
 
 // 株価四本値(/prices/daily_quotes)
 /**
- * 株価四本値レスポンスの型ガード
+ * `data` が {@link PricesDailyQuotesResponse}型（株価四本値(/prices/daily_quotes)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data - 対象のデータ
- * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、daily_quotes に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`daily_quotes` に含まれるオブジェクトリストのうち、最初 `sampleSize` 分だけのデータを型検証に使用します。
  * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
  * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
- * @returns {data is PriceDailyQuotesResponse} 
+ * @returns {data is PricesDailyQuotesResponse} 
+ * @category J-Quants API レスポンス
  */
-export function isPriceDailyQuotesResponse(data: unknown ,sampleSize = 0 ): data is PriceDailyQuotesResponse
+export function isPricesDailyQuotesResponse(data: unknown ,sampleSize = 0 ): data is PricesDailyQuotesResponse
 {
+	const rootKey = 'daily_quotes';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'daily_quotes' in data )
-		|| ! Array.isArray( data.daily_quotes )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -196,7 +215,7 @@ export function isPriceDailyQuotesResponse(data: unknown ,sampleSize = 0 ): data
 
 	const rootSpecs: KVTypeValidatorT[] =
 	[
-		{required: true,	key: 'daily_quotes',	type:'array' },
+		{required: true,	key: rootKey,	type:'array' },
 		{required: false,	key: 'pagination_key',	type:'string'}
 	] as const;
 
@@ -253,10 +272,10 @@ export function isPriceDailyQuotesResponse(data: unknown ,sampleSize = 0 ): data
 	{
 		if( sampleSize > 0 )
 		{
-			return data.daily_quotes.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.daily_quotes;
+		return data[rootKey];
 	})();
 	
 	return (
@@ -266,12 +285,24 @@ export function isPriceDailyQuotesResponse(data: unknown ,sampleSize = 0 ): data
 }
 
 
-export function isPricePricesAmResponse( data: unknown , sampleSize = 0 ): data is PricePricesAmResponse
+
+/**
+ * `data` が {@link PricesPricesAmResponse}型（前場四本値(/prices/prices_am)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0]  - 1 以上の値を指定した場合、info に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is PricesPricesAmResponse} 
+ * @category J-Quants API レスポンス
+ */
+export function isPricesPricesAmResponse( data: unknown , sampleSize = 0 ): data is PricesPricesAmResponse
 {
+	const rootKey = 'prices_am';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'prices_am' in data )
-		|| ! Array.isArray( data.prices_am )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -279,7 +310,7 @@ export function isPricePricesAmResponse( data: unknown , sampleSize = 0 ): data 
 
 	const rootSpecs: KVTypeValidatorT[] =
 	[
-		{required: true,	key: 'prices_am',	type:'array' },
+		{required: true,	key: rootKey,	type:'array' },
 		{required: false,	key: 'pagination_key',	type:'string'}
 	] as const;
 
@@ -299,10 +330,10 @@ export function isPricePricesAmResponse( data: unknown , sampleSize = 0 ): data 
 	{
 		if( sampleSize > 0 )
 		{
-			return data.prices_am.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.prices_am;
+		return data[rootKey];
 	})();
 
 	return (
@@ -312,12 +343,24 @@ export function isPricePricesAmResponse( data: unknown , sampleSize = 0 ): data 
 }
 
 
+
+/**
+ * `data` が {@link MarketsTradesSpecResponse}型（投資部門別情報(/markets/trades_spec)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、info に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is MarketsTradesSpecResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isMarketsTradesSpecResponse( data: unknown , sampleSize = 0 ): data is MarketsTradesSpecResponse
 {
+	const rootKey = 'trades_spec';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'trades_spec' in data )
-		|| ! Array.isArray( data.trades_spec )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -325,7 +368,7 @@ export function isMarketsTradesSpecResponse( data: unknown , sampleSize = 0 ): d
 
 	const rootSpecs: KVTypeValidatorT[] =
 	[
-		{required: true,	key: 'trades_spec',	type:'array' },
+		{required: true,	key: rootKey,	type:'array' },
 		{required: false,	key: 'pagination_key',	type:'string'}
 	] as const;
 
@@ -393,10 +436,10 @@ export function isMarketsTradesSpecResponse( data: unknown , sampleSize = 0 ): d
 	{
 		if( sampleSize > 0 )
 		{
-			return data.trades_spec.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.trades_spec;
+		return data[rootKey];
 	})();
 
 	return (
@@ -407,20 +450,23 @@ export function isMarketsTradesSpecResponse( data: unknown , sampleSize = 0 ): d
 
 
 /**
- * 
+ * `data` が {@link MarketsWeeklyMarginInterestResponse}型（信用取引週末残高(/markets/weekly_margin_interest)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、info に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is MarketsWeeklyMarginInterestResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isMarketsWeeklyMarginInterestResponse( data:unknown , sampleSize = 0 )
 	: data is MarketsWeeklyMarginInterestResponse
 {
+	const rootKey = 'weekly_margin_interest';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'weekly_margin_interest' in data )
-		|| ! Array.isArray( data.weekly_margin_interest )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -428,7 +474,7 @@ export function isMarketsWeeklyMarginInterestResponse( data:unknown , sampleSize
 
 	const rootSpecs: KVTypeValidatorT[] =
 	[
-		{required: true,	key: 'weekly_margin_interest',	type:'array' },
+		{required: true,	key: rootKey,	type:'array' },
 		{required: false,	key: 'pagination_key',	type:'string'}
 	] as const;
 
@@ -450,10 +496,10 @@ export function isMarketsWeeklyMarginInterestResponse( data:unknown , sampleSize
 	{
 		if( sampleSize > 0 )
 		{
-			return data.weekly_margin_interest.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.weekly_margin_interest;
+		return data[rootKey];
 	})();
 
 	return (
@@ -464,20 +510,23 @@ export function isMarketsWeeklyMarginInterestResponse( data:unknown , sampleSize
 
 
 /**
- * 
+ * `data` が {@link MarketsShortSellingResponse}型（業種別空売り比率(/markets/short_selling)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`short_selling` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is MarketsShortSellingResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isMarketsShortSellingResponse( data:unknown , sampleSize = 0 )
 	: data is MarketsShortSellingResponse
 {
+	const rootKey = 'short_selling';
 	if( typeof data !== 'object'
 		|| data === null
-		|| ! ( 'short_selling' in data )
-		|| ! Array.isArray( data.short_selling )
+		|| ! ( rootKey in data )
+		|| ! Array.isArray( data[rootKey] )
 	)
 	{
 		return false;
@@ -485,7 +534,7 @@ export function isMarketsShortSellingResponse( data:unknown , sampleSize = 0 )
 
 	const rootSpecs: KVTypeValidatorT[] =
 	[
-		{required: true,	key: 'short_selling',	type:'array' },
+		{required: true,	key: rootKey,	type:'array' },
 		{required: false,	key: 'pagination_key',	type:'string'}
 	] as const;
 
@@ -502,10 +551,10 @@ export function isMarketsShortSellingResponse( data:unknown , sampleSize = 0 )
 	{
 		if( sampleSize > 0 )
 		{
-			return data.short_selling.slice(0, sampleSize );
+			return data[rootKey].slice(0, sampleSize );
 		}
 
-		return data.short_selling;
+		return data[rootKey];
 	})();
 
 	return (
@@ -517,12 +566,14 @@ export function isMarketsShortSellingResponse( data:unknown , sampleSize = 0 )
 
 
 /**
- * Type guard for MarketsShortSellingPositionsResponse
+ * `data` が {@link MarketsShortSellingPositionsResponse}型（空売り残高報告(/markets/short_selling_positions)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`short_selling_positions` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is MarketsShortSellingPositionsResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isMarketsShortSellingPositionsResponse( data:unknown , sampleSize = 0 )
 	: data is MarketsShortSellingPositionsResponse
@@ -581,12 +632,14 @@ export function isMarketsShortSellingPositionsResponse( data:unknown , sampleSiz
 
 
 /**
- * 
+ * `data` が {@link MarketsBreakdownResponse}型（売買内訳データ(/markets/breakdown)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`breakdown` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is MarketsBreakdownResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isMarketsBreakdownResponse( data:unknown , sampleSize = 0 )
 	: data is MarketsBreakdownResponse
@@ -647,12 +700,14 @@ export function isMarketsBreakdownResponse( data:unknown , sampleSize = 0 )
 
 
 /**
- * 
+ * `data` が {@link MarketsTradingCalendarResponse}型（取引カレンダー(/markets/trading_calendar)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`trading_calendar` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is MarketsTradingCalendarResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isMarketsTradingCalendarResponse( data:unknown , sampleSize: number = 0 )
 	: data is MarketsTradingCalendarResponse
@@ -696,12 +751,14 @@ export function isMarketsTradingCalendarResponse( data:unknown , sampleSize: num
 
 
 /**
- * 
+ * `data` が {@link IndicesResponse}型（指数四本値(/indices)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`indices` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is IndicesResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isIndicesResponse( data:unknown , sampleSize: number = 0 )
 	: data is IndicesResponse
@@ -750,12 +807,14 @@ export function isIndicesResponse( data:unknown , sampleSize: number = 0 )
 
 
 /**
- * 
+ * `data` が {@link IndicesTopixResponse}型（TOPIX指数四本値(/indices/topix)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`topix` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is IndicesTopixResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isIndicesTopixResponse( data:unknown , sampleSize: number = 0 )
 	: data is IndicesTopixResponse
@@ -805,12 +864,14 @@ export function isIndicesTopixResponse( data:unknown , sampleSize: number = 0 )
 
 
 /**
- * 
+ * `data` が {@link FinsStatementsResponse}型（財務情報(/fins/statements)レスポンス）であることを TypeScript に示すための型ガード関数です。
  *
- * @export
- * @param {unknown} data 
- * @param {number} [sampleSize=0] 
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`statements` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
  * @returns {data is FinsStatementsResponse} 
+ * @category J-Quants API レスポンス
  */
 export function isFinsStatementsResponse( data:unknown , sampleSize: number = 0 )
 	: data is FinsStatementsResponse
@@ -959,6 +1020,16 @@ export function isFinsStatementsResponse( data:unknown , sampleSize: number = 0 
 }
 
 
+/**
+ * `data` が {@link FinsFsDetailsResponse}型（財務諸表(BS/PL)(/fins/fs_details)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`fs_details` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is FinsFsDetailsResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isFinsFsDetailsResponse( data:unknown , sampleSize: number = 0 )
 	: data is FinsFsDetailsResponse
 {
@@ -1084,6 +1155,17 @@ export function isFinsFsDetailsResponse( data:unknown , sampleSize: number = 0 )
 }
 
 
+
+/**
+ * `data` が {@link FinsDividendResponse}型（配当金情報(/fins/dividend)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`dividend` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is FinsDividendResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isFinsDividendResponse( data:unknown , sampleSize: number = 0 )
 	: data is FinsDividendResponse
 {
@@ -1147,6 +1229,17 @@ export function isFinsDividendResponse( data:unknown , sampleSize: number = 0 )
 }
 
 
+
+/**
+ * `data` が {@link FinsAnnouncementResponse}型（決算発表予定日(/fins/announcement)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`announcement` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is FinsAnnouncementResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isFinsAnnouncementResponse( data:unknown , sampleSize: number = 0 )
 	: data is FinsAnnouncementResponse
 {
@@ -1194,6 +1287,17 @@ export function isFinsAnnouncementResponse( data:unknown , sampleSize: number = 
 }
 
 
+
+/**
+ * `data` が {@link OptionIndexOptionResponse}型（日経225オプション四本値(/option/index_option)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`index_option` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is OptionIndexOptionResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isOptionIndexOptionResponse( data:unknown , sampleSize: number = 0 )
 	: data is OptionIndexOptionResponse
 {
@@ -1265,6 +1369,17 @@ export function isOptionIndexOptionResponse( data:unknown , sampleSize: number =
 }
 
 
+
+/**
+ * `data` が {@link DerivativesFuturesResponse}型（先物四本値(/derivatives/futures)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`futures` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is DerivativesFuturesResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isDerivativesFuturesResponse( data:unknown , sampleSize: number = 0 )
 	: data is DerivativesFuturesResponse
 {
@@ -1334,6 +1449,17 @@ export function isDerivativesFuturesResponse( data:unknown , sampleSize: number 
 }
 
 
+
+/**
+ * `data` が {@link DerivativesOptionsResponse}型（オプション四本値(/derivatives/options)レスポンス）であることを TypeScript に示すための型ガード関数です。
+ *
+ * @param {unknown} data - 評価対象データ
+ * @param {number} [sampleSize=0] - 1 以上の値を指定した場合、`options` に含まれるオブジェクトリストのうち、最初のその数だけのデータを型検証に使用します。
+ * データサイズが大きくパフォーマンスに影響がある場合に使用してください。
+ * 0 の場合は全てのデータを検証します。デフォルトは 0 です。
+ * @returns {data is DerivativesOptionsResponse} 
+ * @category J-Quants API レスポンス
+ */
 export function isDerivativesOptionsResponse( data:unknown , sampleSize: number = 0 )
 	: data is DerivativesOptionsResponse
 {

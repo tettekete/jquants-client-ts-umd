@@ -22,14 +22,14 @@ $ ts-node api-marketsShortSelling.ts
 
 */
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
@@ -40,7 +40,9 @@ const jqc = new JQC({
 
 	const r = await jqc.marketsShortSelling(
 		{
-			date: '2024-10-23'
+			sector33code: '3450',
+			date: '2024-10-23',
+			// from: '2024-10-01',
 		}
 	);
 

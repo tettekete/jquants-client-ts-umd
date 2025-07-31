@@ -25,14 +25,14 @@ $ ts-node YAMLCredsSample.ts
 */
 
 import path from 'path';
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { YAMLCredentialStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { YAMLCredentialStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { YAMLCredentialStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 // set moduleResolution to NodeNext or node16 in tsconfig.json
 

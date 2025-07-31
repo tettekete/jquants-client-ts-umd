@@ -10,6 +10,14 @@ export type HTTP_METHODS_T = "GET"
 					| "OPTIONS"
 					;
 
+
+/**
+ * 標準の URL クラスを継承し、リクエストメソッドの保持機能やパスの連結機能を持たせたクラスです。
+ *
+ * @class ExUrl
+ * @typedef {ExUrl}
+ * @extends {URL}
+ */
 export default class ExUrl extends URL
 {
 	protected _method: HTTP_METHODS_T = "GET";

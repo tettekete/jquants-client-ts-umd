@@ -1,7 +1,16 @@
 
-import { APITokenStore, TOKEN_RECORD } from '../../types';
+import { APITokenStore } from "../abstract-classes";
+import { TOKEN_RECORD } from '../../types';
 import { Dayjs } from 'dayjs';
 
+/**
+ * メモリ（変数）利用形式の API トークンを保存するストレージクラスの実装です。トークン情報の提供と保存を行います。
+ *
+ * @class InMemoryTokenStore
+ * @typedef {InMemoryTokenStore}
+ * @extends {APITokenStore}
+ * @category デフォルト提供のトークンストア
+ */
 export class InMemoryTokenStore extends APITokenStore
 {
 	private refresh_token: string | undefined = undefined;

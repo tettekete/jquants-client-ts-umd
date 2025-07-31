@@ -22,14 +22,14 @@ $ ts-node api-finsFsDetails.ts
 
 */
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),
@@ -40,7 +40,8 @@ const jqc = new JQC({
 
 	let r = await jqc.finsFsDetails(
 		{
-			code: '7203'
+			code: '7203',
+			date: '2025-05-08',
 		}
 	);
 

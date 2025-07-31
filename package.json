@@ -1,9 +1,9 @@
 {
-  "name": "@tettekete/jquants-client",
-  "version": "1.0.0",
-  "main": "dist/j-quants.js",
+  "name": "@tettekete/jquants-api-client",
+  "version": "0.9.0",
+  "main": "dist/index.js",
   "exports": {
-    ".": "./dist/j-quants.js",
+    ".": "./dist/index.js",
     "./extra": "./dist/extra.js",
     "./type-guard": "./dist/type-guard.js"
   },
@@ -18,7 +18,9 @@
     "dev": "npm run build; node dist/index.js",
     "prepack": "npm run build",
     "lint": "eslint",
-    "link": "npm run build && npm link"
+    "link": "npm run build && npm link",
+    "typedoc:markdown": "npx typedoc --plugin typedoc-plugin-markdown --out ./docs/typedoc/markdown",
+    "typedoc:html": "npx typedoc --out ./docs/typedoc/html"
   },
   "keywords": [],
   "author": "tettekete",
@@ -39,6 +41,9 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsimp": "^2.0.11",
+    "typedoc": "^0.28.8",
+    "typedoc-plugin-markdown": "^4.8.0",
+    "typedoc-plugin-rename-defaults": "^0.7.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.12.0",
     "webpack": "^5.95.0",

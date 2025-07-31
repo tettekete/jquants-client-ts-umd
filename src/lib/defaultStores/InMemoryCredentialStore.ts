@@ -1,12 +1,11 @@
 
 
-import { JQCredentialStore } from '../../types';
+import { JQCredentialStore } from '../abstract-classes';
 
 
 /**
  * 認証情報をメモリ上に保持するクラス
  *
- * @export
  * @class InMemoryCredentialStore
  * @typedef {InMemoryCredentialStore}
  * @extends {JQCredentialStore}
@@ -19,6 +18,7 @@ import { JQCredentialStore } from '../../types';
  * });
  * // または
  * const credsStore = new InMemoryCredentialStore('your_jquants_user', 'your_jquants_password');
+ * @category デフォルト提供の認証情報ストア
  */
 export class InMemoryCredentialStore extends JQCredentialStore
 {

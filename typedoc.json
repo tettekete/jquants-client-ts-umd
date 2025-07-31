@@ -1,0 +1,30 @@
+{
+	"entryPoints": [
+		"./src/jquants-api-client.ts",
+		"./src/extra.ts",
+		"./src/type-guard.ts",
+	],
+	"entryPointStrategy": "resolve",
+	"categoryOrder":[
+		"Main Class",
+		"メインクラス",
+		"Abstract Base Classes",
+		"データストア系のための 抽象（Abstract）クラス",
+		"API Response Types",
+		"J-Quants API レスポンス向け型定義",
+		"Web API コール用リテラルユニオン型",
+		"Interfaces",
+		"Type aliases",
+		"*"
+	],
+	"plugin": [
+		// "typedoc-plugin-markdown",
+		"typedoc-plugin-rename-defaults"
+	],
+	"out": "./docs/typedoc/",
+	"includeVersion": true,
+	"excludePrivate": true,
+	"includeHierarchySummary": true,
+	"jsDocCompatibility": true,
+	"categorizeByGroup": true
+}

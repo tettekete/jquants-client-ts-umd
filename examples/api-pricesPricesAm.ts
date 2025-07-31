@@ -3,9 +3,15 @@
 
 プレミアムプラン以上
 
+> 前場終了時に、前場の株価データを取得することができます。
 > 当日のデータは翌日6:00頃まで取得可能
 
-つまり、休場の日は取得できないので注意
+以下の期間はデータが取得できず unknown エラーとなる
+
+- 平日: 06:00 - 11:30
+- 土曜: 06:00 以降
+- 日曜: 終日
+- 前日が開場日ではない祝祭日等休場日: 終日
 
 ## Ready
 
@@ -26,14 +32,14 @@ $ ts-node api-pricesPricesAm.ts
 
 */
 
-import JQC from '../src/j-quants';
+import JQC from '../src';
 import { DotEnvCredentialStore, YAMLAPITokenStore } from '../src/extra';
 import {isAxiosError} from '../src/type-guard';	// This is a wrapper around axios.isAxiosError().
 
-// if you install `@tettekete/jquants-client` package, you can use it like this:
-// import JQC from '@tettekete/jquants-client';
-// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-client/extra';
-// import { isAxiosError } from '@tettekete/jquants-client/type-guard';
+// if you install `@tettekete/jquants-api-client` package, you can use it like this:
+// import JQC from '@tettekete/jquants-api-client';
+// import { DotEnvCredentialStore, YAMLAPITokenStore } from '@tettekete/jquants-api-client/extra';
+// import { isAxiosError } from '@tettekete/jquants-api-client/type-guard';
 
 const jqc = new JQC({
 	credsStore: new DotEnvCredentialStore(),

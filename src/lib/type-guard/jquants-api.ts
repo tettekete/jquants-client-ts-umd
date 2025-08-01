@@ -608,7 +608,7 @@ export function isMarketsShortSellingPositionsResponse( data:unknown , sampleSiz
 		{ required: true,	key: 'ShortPositionsInSharesNumber',				type: 'number' },
 		{ required: true,	key: 'ShortPositionsInTradingUnitsNumber',			type: 'number' },
 		{ required: true,	key: 'CalculationInPreviousReportingDate',			type: 'string' },
-		{ required: true,	key: 'ShortPositionsInPreviousReportingRatio',		type: 'number' },
+		{ required: true,	key: 'ShortPositionsInPreviousReportingRatio',		type: ['number','null'] },	// リファレンスとは異なり null が買えるケースがある。
 		{ required: true,	key: 'Notes',										type: 'string' },
 				
 	] as const;
